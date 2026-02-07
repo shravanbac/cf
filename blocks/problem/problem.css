@@ -1,0 +1,68 @@
+/* Problem Block — ContentFlow */
+
+.problem {
+  padding: var(--section-py) var(--px);
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+.problem-header {
+  margin-bottom: 56px;
+}
+
+.problem-header h2 {
+  margin-bottom: 16px;
+}
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.problem-card {
+  padding: 36px 32px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.problem-card:hover {
+  border-color: rgb(227 72 80 / 20%);
+  transform: translateY(-4px);
+}
+
+.problem-stat {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin-bottom: 12px;
+  color: var(--red);
+}
+
+.problem-card h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.problem-card p {
+  font-size: 15px;
+  color: var(--text-tertiary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Responsive */
+@media (width <= 1024px) {
+  .problem-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (width <= 640px) {
+  .problem-grid {
+    grid-template-columns: 1fr;
+  }
+}
