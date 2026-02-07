@@ -9,6 +9,10 @@
  */
 export default function decorate(block) {
   const rows = [...block.children];
+
+  // Set section ID for anchor navigation
+  const section = block.closest('.section');
+  if (section) section.id = 'problem';
   const labelRow = rows[0];
   const headingRow = rows[1];
   const subtitleRow = rows[2];
