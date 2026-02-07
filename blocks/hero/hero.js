@@ -89,7 +89,7 @@ function buildPipelineHTML() {
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
             Pipeline complete
           </div>
-          <div class="pl-summary-right">9 steps \u00B7</div>
+          <div class="pl-summary-right">7 steps \u00B7 <strong id="plTotal">4.7s</strong></div>
         </div>
         <button class="pl-replay" id="plReplay">\u21BB Replay</button>
       </div>
