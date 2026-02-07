@@ -4,13 +4,15 @@ import { animTimeout, clearAnimTimeouts } from '../../scripts/scripts.js';
  * Pipeline step definitions (hardcoded — not authored content).
  */
 const PIPELINE_STEPS = [
-  { name: 'Create Workfront Project', tool: 'Fusion', time: '0.3s' },
-  { name: 'Generate Hero Image', tool: 'Firefly', time: '1.2s' },
-  { name: 'Create Product Page', tool: 'EDS API', time: '0.8s' },
-  { name: 'Create Blog Article', tool: 'EDS API', time: '0.6s' },
-  { name: 'Create Campaign', tool: 'EDS API', time: '0.5s' },
-  { name: 'Generate Brochure PDF', tool: 'Firefly', time: '0.9s' },
-  { name: 'Assign Review Tasks', tool: 'Workfront', time: '0.4s' },
+  { name: 'Create Workfront Project', tool: 'Fusion' },
+  { name: 'Generate Product Image', tool: 'Firefly' },
+  { name: 'Create Product Page', tool: 'EDS API' },
+  { name: 'Create Blog Article', tool: 'EDS API' },
+  { name: 'Create Campaign', tool: 'EDS API' },
+  { name: 'Generate Brochure PDF', tool: 'PDF Services' },
+  { name: 'Assign Review Tasks', tool: 'Workfront' },
+  { name: 'Publish Product Page', tool: 'Fusion' },
+  { name: 'Unpublish Campaign', tool: 'Fusion' },
 ];
 
 const PIPELINE_ASSETS = [
@@ -87,7 +89,7 @@ function buildPipelineHTML() {
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
             Pipeline complete
           </div>
-          <div class="pl-summary-right">7 steps \u00B7 <strong id="plTotal">4.7s</strong></div>
+          <div class="pl-summary-right">9 steps \u00B7</div>
         </div>
         <button class="pl-replay" id="plReplay">\u21BB Replay</button>
       </div>
