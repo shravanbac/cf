@@ -1,34 +1,46 @@
-# Your Project's Title...
-Your project's description...
+# ContentFlow — AEM Rockstar 2026
 
-## Environments
-- Preview: https://main--{repo}--{owner}.aem.page/
-- Live: https://main--{repo}--{owner}.aem.live/
+Enterprise content operations accelerator. From request to launch, fully automated.
 
-## Documentation
+**Live URL:** `https://main--contentflow--shravanbac.aem.page/`
 
-Before using the aem-boilerplate, we recommand you to go through the documentation on https://www.aem.live/docs/ and more specifically:
-1. [Developer Tutorial](https://www.aem.live/developer/tutorial)
-2. [The Anatomy of a Project](https://www.aem.live/developer/anatomy-of-a-project)
-3. [Web Performance](https://www.aem.live/developer/keeping-it-100)
-4. [Markup, Sections, Blocks, and Auto Blocking](https://www.aem.live/developer/markup-sections-blocks)
+## Tech Stack
+- **Authoring:** DA.live (`da.live/shravanbac/contentflow`)
+- **Delivery:** Adobe Edge Delivery Services
+- **Automation:** Workfront + Fusion + I/O Runtime + Firefly Services
 
-## Installation
+## Setup
 
-```sh
-npm i
-```
+1. Create repo `shravanbac/contentflow` on GitHub
+2. Push this code to `main` branch
+3. Author content in DA.live at `da.live/shravanbac/contentflow`
+4. Preview at `https://main--contentflow--shravanbac.aem.page/`
 
-## Linting
+## Block Map
 
-```sh
-npm run lint
-```
+| Section | Block Name | Files |
+|---------|-----------|-------|
+| Navigation | `header` (auto) | `blocks/header/` |
+| Hero + Pipeline | `hero` + `pipeline` | `blocks/hero/`, `blocks/pipeline/` |
+| Solution Steps | `solution` | `blocks/solution/` |
+| Deliverables | `deliverables` | `blocks/deliverables/` |
+| Tech Stack | `tech-stack` | `blocks/tech-stack/` |
+| Backstory | `backstory` | `blocks/backstory/` |
+| Team | `team` | `blocks/team/` |
+| Terminal | `terminal` | `blocks/terminal/` |
+| Launch Form | `launch-form` | `blocks/launch-form/` |
+| Footer | `footer` (auto) | `blocks/footer/` |
 
-## Local development
+## DA.live Authoring Guide
 
-1. Create a new repository based on the `aem-boilerplate` template
-1. Add the [AEM Code Sync GitHub App](https://github.com/apps/aem-code-sync) to the repository
-1. Install the [AEM CLI](https://github.com/adobe/helix-cli): `npm install -g @adobe/aem-cli`
-1. Start AEM Proxy: `aem up` (opens your browser at `http://localhost:3000`)
-1. Open the `{repo}` directory in your favorite IDE and start coding :)
+### `/nav` page
+Create a page named `nav` with:
+- A list of navigation links (Solution, Deliverables, Tech Stack, etc.)
+
+### `/footer` page
+Create a page named `footer` with:
+- A paragraph: `ContentFlow by **Cognizant** — Built for AEM Rockstar 2026`
+
+### `/index` page
+The main landing page. Each section is authored as a block table in DA.live.
+See individual block READMEs for authoring instructions.
