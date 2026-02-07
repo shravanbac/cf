@@ -4,29 +4,29 @@ import { animTimeout, clearAnimTimeouts } from '../../scripts/scripts.js';
  * Pipeline step definitions (hardcoded — not authored content).
  */
 const PIPELINE_STEPS = [
-  { name: 'Create Workfront Project', tool: 'Fusion' },
-  { name: 'Generate Product Image', tool: 'Firefly' },
-  { name: 'Create Product Page', tool: 'EDS API' },
-  { name: 'Create Blog Article', tool: 'EDS API' },
-  { name: 'Create Campaign', tool: 'EDS API' },
-  { name: 'Generate Brochure PDF', tool: 'PDF Services' },
-  { name: 'Assign Review Tasks', tool: 'Workfront' },
-  { name: 'Publish Product Page', tool: 'Fusion' },
-  { name: 'Unpublish Campaign', tool: 'Fusion' },
+  { name: 'Create Workfront Project', tool: 'Fusion', time: '0.3s' },
+  { name: 'Generate Product Image', tool: 'Firefly', time: '1.2s' },
+  { name: 'Create Product Page', tool: 'EDS API', time: '0.8s' },
+  { name: 'Create Blog Article', tool: 'EDS API', time: '0.6s' },
+  { name: 'Create Campaign', tool: 'EDS API', time: '0.5s' },
+  { name: 'Generate Brochure PDF', tool: 'PDF Services', time: '0.9s' },
+  { name: 'Assign Review Tasks', tool: 'Workfront', time: '0.4s' },
+  { name: 'Publish Product Page', tool: 'Fusion', time: '0.3s' },
+  { name: 'Unpublish Campaign', tool: 'Fusion', time: '0.2s' },
 ];
 
 const PIPELINE_ASSETS = [
   {
-    label: 'Product', color: '#4B9CF5', bg: 'rgb(20 115 230 / 0.08)', icon: 'doc',
+    label: 'Product', color: '#4B9CF5', bg: 'rgb(20 115 230 / 8%)', icon: 'doc',
   },
   {
-    label: 'Article', color: '#B07CE8', bg: 'rgb(146 86 217 / 0.08)', icon: 'pen',
+    label: 'Article', color: '#B07CE8', bg: 'rgb(146 86 217 / 8%)', icon: 'pen',
   },
   {
-    label: 'Campaign', color: '#0FB5AE', bg: 'rgb(15 181 174 / 0.08)', icon: 'clock',
+    label: 'Campaign', color: '#0FB5AE', bg: 'rgb(15 181 174 / 8%)', icon: 'clock',
   },
   {
-    label: 'Brochure', color: '#F5A623', bg: 'rgb(230 134 25 / 0.08)', icon: 'book',
+    label: 'Brochure', color: '#F5A623', bg: 'rgb(230 134 25 / 8%)', icon: 'book',
   },
 ];
 
@@ -61,6 +61,8 @@ function buildPipelineHTML() {
     </div>
   `).join('');
 
+  const stepCount = PIPELINE_STEPS.length;
+
   return `
     <div class="pipeline" id="pipeline">
       <div class="pipeline-chrome">
@@ -89,7 +91,7 @@ function buildPipelineHTML() {
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
             Pipeline complete
           </div>
-          <div class="pl-summary-right">7 steps \u00B7 <strong id="plTotal">4.7s</strong></div>
+          <div class="pl-summary-right">${stepCount} steps \u00B7 <strong id="plTotal">0s</strong></div>
         </div>
         <button class="pl-replay" id="plReplay">\u21BB Replay</button>
       </div>
@@ -129,6 +131,11 @@ function runPipeline(andLoop, isVisible) {
   animTimeout(() => trigger.classList.add('vis'), delay);
   delay += 600;
 
+  // Asset reveal mapping: step index -> asset index
+  const assetMap = {
+    2: 0, 3: 1, 4: 2, 5: 3,
+  };
+
   steps.forEach((step, i) => {
     const time = step.getAttribute('data-time');
     const ms = parseFloat(time) * 1000;
@@ -147,10 +154,9 @@ function runPipeline(andLoop, isVisible) {
       status.className = 'pl-status done';
       status.textContent = '\u2713';
       step.querySelector('.pl-step-time').textContent = time;
-      if (i === 2 && assets[0]) assets[0].classList.add('vis');
-      if (i === 3 && assets[1]) assets[1].classList.add('vis');
-      if (i === 4 && assets[2]) assets[2].classList.add('vis');
-      if (i === 5 && assets[3]) assets[3].classList.add('vis');
+      if (assetMap[i] !== undefined && assets[assetMap[i]]) {
+        assets[assetMap[i]].classList.add('vis');
+      }
     }, delay + ms);
 
     delay += ms + 150;
