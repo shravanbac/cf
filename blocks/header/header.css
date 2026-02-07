@@ -12,11 +12,13 @@ header {
 
 header .header-wrapper {
   padding: 0;
+  max-width: 100%;
 }
 
 header .header.block {
   max-width: 100%;
   margin: 0;
+  padding: 0;
 }
 
 nav#nav {
@@ -104,7 +106,7 @@ nav#nav {
   white-space: nowrap;
 }
 
-.nav-cta {
+a.nav-cta {
   font-size: 13px;
   font-weight: 600;
   color: #fff;
@@ -113,9 +115,11 @@ nav#nav {
   border-radius: 18px;
   background: var(--blue-primary);
   transition: background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.nav-cta:hover {
+a.nav-cta:hover {
   background: var(--blue-soft);
   color: #fff;
 }
@@ -244,15 +248,20 @@ nav#nav {
   background: var(--blue-soft);
 }
 
-/* Responsive */
-@media (width <= 768px) {
-  .nav-links,
-  .nav-right {
+/* Responsive — matches prototype breakpoints */
+@media (width <= 1024px) {
+  .nav-links {
     display: none;
   }
 
   .hamburger {
     display: flex;
+  }
+}
+
+@media (width <= 768px) {
+  .nav-right {
+    display: none;
   }
 
   nav#nav {
