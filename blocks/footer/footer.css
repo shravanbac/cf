@@ -1,6 +1,7 @@
 /* Footer Block — ContentFlow */
 footer {
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 footer .footer-wrapper {

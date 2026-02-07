@@ -41,7 +41,8 @@ export default async function decorate(block) {
     </div>
   `;
 
-  // Mobile drawer
+  // Mobile drawer — appended to body to escape header's backdrop-filter
+  // (backdrop-filter creates a containing block that traps position:fixed children)
   const drawer = document.createElement('div');
   drawer.className = 'mobile-drawer';
   drawer.id = 'mobileDrawer';
@@ -53,7 +54,7 @@ export default async function decorate(block) {
 
   block.textContent = '';
   block.append(nav);
-  block.append(drawer);
+  document.body.append(drawer);
 
   // Hamburger toggle
   const hamburger = nav.querySelector('#hamburgerBtn');
@@ -68,5 +69,13 @@ export default async function decorate(block) {
       hamburger.classList.remove('open');
       drawer.classList.remove('open');
     });
+  });
+
+  // Close drawer on resize above breakpoint
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1024) {
+      hamburger.classList.remove('open');
+      drawer.classList.remove('open');
+    }
   });
 }
