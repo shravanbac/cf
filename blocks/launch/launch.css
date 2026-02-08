@@ -1,0 +1,202 @@
+/* Launch Block — ContentFlow */
+
+.launch {
+  padding: var(--section-py) var(--px) 100px;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  scroll-margin-top: calc(var(--nav-height) + 1em);
+}
+
+.launch-subtitle {
+  max-width: 640px;
+}
+
+/* 2-col grid: info left, form right */
+.launch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  margin-top: 56px;
+  align-items: start;
+}
+
+/* Left info column */
+.launch-info h3 {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.launch-info > p {
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 32px;
+}
+
+/* Checklist */
+.launch-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.launch-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.launch-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: rgb(45 157 120 / 8%);
+  border: 1px solid rgb(45 157 120 / 15%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.launch-check svg {
+  width: 12px;
+  height: 12px;
+  stroke: var(--green);
+}
+
+/* Form card */
+.form-card {
+  padding: 36px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.form-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(90deg, var(--blue-primary), var(--violet), var(--amber), var(--green));
+}
+
+/* Form fields */
+.fg {
+  margin-bottom: 20px;
+}
+
+.fg label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.fg .req {
+  color: var(--red);
+}
+
+.fg .hint {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.fi,
+.ft,
+.fs {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.ft {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.fs {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%236E6E6E' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.fs option {
+  background: var(--bg-card);
+}
+
+.fi::placeholder,
+.ft::placeholder {
+  color: var(--text-muted);
+}
+
+.fi:focus,
+.ft:focus,
+.fs:focus {
+  border-color: var(--blue-primary);
+}
+
+.f-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Submit button */
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  border-radius: 20px;
+  margin-top: 8px;
+  background: var(--blue-primary);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn-submit:hover {
+  background: var(--blue-soft);
+}
+
+/* Responsive */
+@media (width <= 1024px) {
+  .launch-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+}
+
+@media (width <= 640px) {
+  .f-row {
+    grid-template-columns: 1fr;
+  }
+}
