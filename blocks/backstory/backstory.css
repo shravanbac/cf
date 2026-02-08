@@ -1,0 +1,204 @@
+/* Backstory Block — ContentFlow */
+
+.backstory {
+  padding: var(--section-py) var(--px);
+  max-width: var(--max-w);
+  margin: 0 auto;
+  scroll-margin-top: calc(var(--nav-height) + 1em);
+}
+
+/* 2-col grid: prose left, phases right */
+.backstory-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  margin-top: 48px;
+  align-items: start;
+}
+
+/* Prose */
+.backstory-prose p {
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.backstory-prose p:first-child::first-letter {
+  font-size: 48px;
+  font-weight: 800;
+  float: left;
+  line-height: 0.8;
+  margin: 4px 10px 0 0;
+  color: var(--blue-light);
+}
+
+/* Quote */
+.backstory-quote {
+  margin: 24px 0 0;
+  padding: 20px 24px;
+  border-radius: 10px;
+  background: var(--blue-bg);
+  border-left: 3px solid var(--blue-primary);
+}
+
+.backstory-quote p {
+  font-size: 15px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Phase tabs */
+.phase-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.phase-tab {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.3s, background 0.3s;
+  font-family: var(--font);
+}
+
+.phase-tab:hover {
+  border-color: var(--border-hover);
+}
+
+.phase-tab-num {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.phase-tab:nth-child(1) .phase-tab-num {
+  color: var(--blue-light);
+}
+
+.phase-tab:nth-child(2) .phase-tab-num {
+  color: var(--violet-light);
+}
+
+.phase-tab:nth-child(3) .phase-tab-num {
+  color: var(--amber-light);
+}
+
+.phase-tab:nth-child(4) .phase-tab-num {
+  color: var(--green-light);
+}
+
+.phase-tab-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.phase-tab.active .phase-tab-name {
+  color: var(--text-primary);
+}
+
+/* Active tab colors per phase */
+.phase-tab.active:nth-child(1) {
+  border-color: var(--blue-primary);
+  background: rgb(20 115 230 / 6%);
+}
+
+.phase-tab.active:nth-child(2) {
+  border-color: var(--violet);
+  background: rgb(146 86 217 / 6%);
+}
+
+.phase-tab.active:nth-child(3) {
+  border-color: var(--amber);
+  background: rgb(230 134 25 / 6%);
+}
+
+.phase-tab.active:nth-child(4) {
+  border-color: var(--green);
+  background: rgb(45 157 120 / 6%);
+}
+
+/* Phase panels */
+.phase-panels {
+  position: relative;
+}
+
+.phase-panel {
+  display: none;
+  padding: 24px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  animation: fade-up 0.3s ease;
+}
+
+.phase-panel.active {
+  display: block;
+}
+
+.phase-panel-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.phase-panel:nth-child(1) .phase-panel-label {
+  color: var(--blue-light);
+}
+
+.phase-panel:nth-child(2) .phase-panel-label {
+  color: var(--violet-light);
+}
+
+.phase-panel:nth-child(3) .phase-panel-label {
+  color: var(--amber-light);
+}
+
+.phase-panel:nth-child(4) .phase-panel-label {
+  color: var(--green-light);
+}
+
+.phase-panel h4 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.phase-panel p {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Responsive */
+@media (width <= 1024px) {
+  .backstory-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+}
+
+@media (width <= 768px) {
+  .phase-tabs {
+    flex-wrap: wrap;
+  }
+
+  .phase-tab {
+    flex: 1 1 calc(50% - 4px);
+  }
+}
