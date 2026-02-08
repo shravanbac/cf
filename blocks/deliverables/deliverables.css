@@ -1,0 +1,234 @@
+/* Deliverables Block — ContentFlow */
+
+.deliverables {
+  padding: var(--section-py) var(--px);
+  max-width: var(--max-w);
+  margin: 0 auto;
+  scroll-margin-top: calc(var(--nav-height) + 1em);
+}
+
+.deliverables-header {
+  margin-bottom: 56px;
+}
+
+.deliverables-header h2 {
+  margin-bottom: 16px;
+}
+
+/* Card grid — 2×2 */
+.del-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.del-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.del-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+}
+
+/* Browser chrome bar */
+.del-browser {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+}
+
+.del-browser .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.del-browser .dot-r {
+  background: #ff5f57;
+}
+
+.del-browser .dot-y {
+  background: #febc2e;
+}
+
+.del-browser .dot-g {
+  background: #28c840;
+}
+
+.del-url {
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 3%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Preview area */
+.del-preview {
+  padding: 28px;
+  min-height: 180px;
+  position: relative;
+}
+
+/* Badge */
+.del-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgb(45 157 120 / 10%);
+  color: var(--green);
+  border: 1px solid rgb(45 157 120 / 15%);
+}
+
+.del-badge-cyan {
+  background: rgb(15 181 174 / 10%);
+  color: var(--cyan);
+  border-color: rgb(15 181 174 / 15%);
+}
+
+/* Mockup elements */
+.mock-h {
+  height: 20px;
+  width: 70%;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 6%);
+  margin-bottom: 10px;
+}
+
+.mock-line {
+  height: 8px;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 4%);
+  margin-bottom: 6px;
+}
+
+.mock-blocks {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.mock-block {
+  height: 44px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 2%);
+  border: 1px solid rgb(0 0 0 / 4%);
+}
+
+/* Blog article meta */
+.del-meta {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+.del-tag {
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgb(230 134 25 / 10%);
+  font-size: 10px;
+  color: var(--amber-light);
+  font-weight: 600;
+}
+
+.del-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Campaign countdown */
+.del-countdown {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+}
+
+.del-expires {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin: 4px 0 18px;
+}
+
+.del-pill {
+  width: 100px;
+  height: 32px;
+  border-radius: 16px;
+  background: rgb(15 181 174 / 10%);
+  border: 1px solid rgb(15 181 174 / 12%);
+  margin: 0 auto;
+}
+
+/* Brochure PDF layout */
+.del-pdf-layout {
+  display: flex;
+  gap: 16px;
+}
+
+.del-pdf-left {
+  flex: 1;
+}
+
+.del-pdf-right {
+  flex: 1;
+}
+
+.del-pdf-icon {
+  width: 90%;
+  height: 80px;
+  border-radius: 6px;
+  background: rgb(45 157 120 / 5%);
+  border: 1px solid rgb(45 157 120 / 8%);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Info footer */
+.del-info {
+  padding: 20px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+}
+
+.del-info h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.del-info p {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* Responsive */
+@media (width <= 1024px) {
+  .del-grid {
+    grid-template-columns: 1fr;
+  }
+}
