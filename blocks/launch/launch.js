@@ -15,7 +15,18 @@ const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-
 const SEND_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>';
 
 /**
+ * Adobe I/O Runtime proxy URL.
+ * Proxies form payload to Fusion webhook with Basic Auth (credentials hidden server-side).
+ * Set to empty string to fall back to demo mode (simulated).
+ *
+ * Deploy: aio rt action create create-page-proxy --kind nodejs:18 --web true create-page-proxy.js
+ * Then: aio rt action get create-page-proxy --url
+ */
+const WORKER_URL = 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/create-page-proxy';
+
+/**
  * Builds the form card HTML.
+ * Each input has a data-field attribute for payload extraction.
  * @returns {string}
  */
 function buildFormHTML() {
@@ -24,24 +35,24 @@ function buildFormHTML() {
       <div class="launch-form-inner">
         <div class="fg">
           <label>Product Name <span class="req">*</span></label>
-          <input type="text" class="fi" value="Pulse" required>
+          <input type="text" class="fi" data-field="productName" value="Pulse" required>
         </div>
         <div class="fg">
           <label>Tagline <span class="req">*</span></label>
-          <input type="text" class="fi" value="Real-time visibility into every integration">
+          <input type="text" class="fi" data-field="tagline" value="Real-time visibility into every integration">
         </div>
         <div class="fg">
           <label>Product Description <span class="req">*</span></label>
-          <textarea class="ft" rows="3">AI-powered integration monitoring platform that gives enterprise IT teams real-time visibility into every API, webhook, and data flow across their technology stack.</textarea>
+          <textarea class="ft" data-field="description" rows="3">AI-powered integration monitoring platform that gives enterprise IT teams real-time visibility into every API, webhook, and data flow across their technology stack.</textarea>
         </div>
         <div class="fg">
           <label>Key Features <span class="req">*</span> <span class="hint">(comma separated)</span></label>
-          <input type="text" class="fi" value="Real-time Dashboard, Smart Alerts, Health Scores, Audit Trail">
+          <input type="text" class="fi" data-field="features" value="Real-time Dashboard, Smart Alerts, Health Scores, Audit Trail">
         </div>
         <div class="f-row">
           <div class="fg">
             <label>Target Audience <span class="req">*</span></label>
-            <select class="fs" required>
+            <select class="fs" data-field="audience" required>
               <option disabled>Select audience</option>
               <option selected>Enterprise IT Teams</option>
               <option>Marketing Teams</option>
@@ -51,7 +62,7 @@ function buildFormHTML() {
           </div>
           <div class="fg">
             <label>Campaign Type <span class="req">*</span></label>
-            <select class="fs" required>
+            <select class="fs" data-field="campaignType" required>
               <option disabled>Select duration</option>
               <option selected>Flash Campaign (2 min)</option>
               <option>Standard (24 hours)</option>
@@ -61,7 +72,7 @@ function buildFormHTML() {
         </div>
         <div class="fg">
           <label>Requested By <span class="req">*</span></label>
-          <input type="text" class="fi" value="Shravan Bachu">
+          <input type="text" class="fi" data-field="requestedBy" value="Shravan Bachu">
         </div>
         <button type="button" class="btn-submit" id="btnLaunch">
           ${SEND_SVG}
@@ -73,10 +84,55 @@ function buildFormHTML() {
 }
 
 /**
+ * Collects form field values using data-field attributes.
+ * @param {Element} container The form container element
+ * @returns {object} Form payload
+ */
+function collectFormData(container) {
+  const payload = {};
+  container.querySelectorAll('[data-field]').forEach((el) => {
+    payload[el.getAttribute('data-field')] = el.value.trim();
+  });
+  return payload;
+}
+
+/**
+ * Sends payload to the Cloudflare Worker proxy.
+ * @param {object} payload Form data
+ * @returns {Promise<object>} Response from worker
+ */
+async function submitToWorker(payload) {
+  const resp = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: resp.statusText }));
+    throw new Error(err.error || `HTTP ${resp.status}`);
+  }
+  return resp.json();
+}
+
+/**
+ * Sets button state (text, color, disabled).
+ * @param {Element} btn Button element
+ * @param {string} html Inner HTML
+ * @param {string} bg Background CSS value (empty to reset)
+ * @param {boolean} disabled Whether button is disabled
+ */
+function setBtnState(btn, html, bg, disabled) {
+  btn.innerHTML = html;
+  btn.style.background = bg;
+  btn.style.opacity = disabled ? '0.6' : '1';
+  btn.disabled = disabled;
+}
+
+/**
  * Decorates the launch block.
  * Expects authored rows:
  *   Row 0: label text
- *   Row 1: heading (H2) — may contain gradient-text
+ *   Row 1: heading (H2) — may contain gradient-text via <em>
  *   Row 2: subtitle paragraph
  * Form and checklist are auto-generated.
  * @param {Element} block The launch block element
@@ -123,26 +179,55 @@ export default function decorate(block) {
     </div>
   `;
 
-  // Submit button — simulated Fusion call
   const btn = block.querySelector('#btnLaunch');
-  if (btn) {
-    const originalHTML = btn.innerHTML;
-    btn.addEventListener('click', () => {
-      if (btn.disabled) return;
-      btn.innerHTML = '\u23F3 Creating assets via Fusion...';
-      btn.style.opacity = '0.6';
-      btn.disabled = true;
+  if (!btn) return;
 
-      setTimeout(() => {
-        btn.innerHTML = '\u2713 Pulse launch initiated \u2014 check Workfront';
-        btn.style.background = 'var(--green)';
-        btn.style.opacity = '1';
-        setTimeout(() => {
-          btn.innerHTML = originalHTML;
-          btn.style.background = '';
-          btn.disabled = false;
-        }, 4000);
-      }, 2500);
-    });
-  }
+  const originalHTML = btn.innerHTML;
+
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+
+    const payload = collectFormData(block);
+
+    // Validate required fields
+    if (!payload.productName || !payload.description) {
+      setBtnState(btn, '\u26A0 Please fill all required fields', 'var(--red)', false);
+      setTimeout(() => setBtnState(btn, originalHTML, '', false), 2500);
+      return;
+    }
+
+    setBtnState(btn, '\u23F3 Creating assets via Fusion...', '', true);
+
+    // Live mode — POST to Cloudflare Worker
+    if (WORKER_URL) {
+      try {
+        const result = await submitToWorker(payload);
+        setBtnState(
+          btn,
+          `\u2713 ${payload.productName} launch initiated \u2014 check Workfront`,
+          'var(--green)',
+          false,
+        );
+        /* eslint-disable-next-line no-console */
+        console.log('[ContentFlow] Launch result:', result);
+      } catch (err) {
+        setBtnState(btn, `\u2716 Error: ${err.message}`, 'var(--red)', false);
+        /* eslint-disable-next-line no-console */
+        console.error('[ContentFlow] Launch error:', err);
+      }
+      setTimeout(() => setBtnState(btn, originalHTML, '', false), 4000);
+      return;
+    }
+
+    // Demo mode — simulated response
+    setTimeout(() => {
+      setBtnState(
+        btn,
+        `\u2713 ${payload.productName} launch initiated \u2014 check Workfront`,
+        'var(--green)',
+        false,
+      );
+      setTimeout(() => setBtnState(btn, originalHTML, '', false), 4000);
+    }, 2500);
+  });
 }
