@@ -1,0 +1,81 @@
+/* Related Content Block — asset cards with links */
+
+.related-content {
+  padding: clamp(48px, 6vw, 80px) 0;
+  background: var(--bg-alt);
+}
+
+/* Header row */
+.related-content > div:first-child {
+  margin-bottom: 32px;
+}
+
+.related-content h2 {
+  font-size: var(--heading-font-size-l);
+  color: var(--text-primary);
+}
+
+/* Cards row */
+.related-content > div:nth-child(2) {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.related-content > div:nth-child(2) > div {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 24px;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.related-content > div:nth-child(2) > div:hover {
+  border-color: var(--blue-primary);
+  box-shadow: 0 4px 20px rgb(20 115 230 / 10%);
+  transform: translateY(-2px);
+}
+
+/* Link styling */
+.related-content > div:nth-child(2) > div p:first-child {
+  margin-bottom: 8px;
+}
+
+.related-content > div:nth-child(2) > div strong a {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--blue-primary);
+  text-decoration: none;
+}
+
+.related-content > div:nth-child(2) > div strong a:hover {
+  text-decoration: underline;
+}
+
+/* Description */
+.related-content > div:nth-child(2) > div p:last-child {
+  font-size: var(--body-font-size-s);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Icon before link (emoji-based via ::before or content) */
+.related-content > div:nth-child(2) > div:nth-child(1) strong a::before {
+  content: "\1F4C4 ";
+}
+
+.related-content > div:nth-child(2) > div:nth-child(2) strong a::before {
+  content: "\23F0 ";
+}
+
+.related-content > div:nth-child(2) > div:nth-child(3) strong a::before {
+  content: "\1F4E5 ";
+}
+
+@media (width <= 768px) {
+  .related-content > div:nth-child(2) {
+    grid-template-columns: 1fr;
+  }
+}

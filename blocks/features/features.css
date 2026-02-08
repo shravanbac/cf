@@ -1,0 +1,55 @@
+/* Features Block — product page feature cards */
+
+.features {
+  padding: clamp(48px, 6vw, 80px) 0;
+  background: var(--bg-alt);
+  border-radius: 0;
+}
+
+/* Header row */
+.features > div:first-child {
+  margin-bottom: 32px;
+}
+
+.features h2 {
+  font-size: var(--heading-font-size-l);
+  color: var(--text-primary);
+}
+
+/* Feature cards grid */
+.features > div:not(:first-child) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.features > div:not(:first-child) > div {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.features > div:not(:first-child) > div:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+}
+
+.features > div:not(:first-child) h3 {
+  font-size: var(--heading-font-size-s);
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.features > div:not(:first-child) p {
+  font-size: var(--body-font-size-s);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+@media (width <= 600px) {
+  .features > div:not(:first-child) {
+    grid-template-columns: 1fr;
+  }
+}

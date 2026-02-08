@@ -1,0 +1,47 @@
+/* Details Block — key-value pair display */
+
+.details {
+  padding: clamp(48px, 6vw, 80px) 0;
+}
+
+.details h2 {
+  font-size: var(--heading-font-size-l);
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.details > div {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+  align-items: baseline;
+}
+
+.details > div:first-child {
+  border-top: 1px solid var(--border);
+}
+
+/* Label (first cell) */
+.details > div > div:first-child p {
+  font-size: var(--body-font-size-s);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* Value (second cell) */
+.details > div > div:last-child p {
+  font-size: var(--body-font-size-m);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+@media (width <= 600px) {
+  .details > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
