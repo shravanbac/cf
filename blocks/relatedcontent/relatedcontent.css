@@ -1,81 +1,102 @@
-/* Related Content Block — asset cards with links */
-
+/* related-content — linked cards for article, campaign, brochure */
 .related-content {
-  padding: clamp(48px, 6vw, 80px) 0;
-  background: var(--bg-alt);
-}
-
-/* Header row */
-.related-content > div:first-child {
-  margin-bottom: 32px;
+  padding: 48px 0 56px;
 }
 
 .related-content h2 {
-  font-size: var(--heading-font-size-l);
+  font-size: 22px;
+  font-weight: 700;
   color: var(--text-primary);
+  margin-bottom: 24px;
 }
 
-/* Cards row */
-.related-content > div:nth-child(2) {
+.related-content-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 16px;
 }
 
-.related-content > div:nth-child(2) > div {
-  background: var(--bg);
+.related-content-card {
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 28px 24px;
-  text-align: center;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  padding: 24px 22px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
 }
 
-.related-content > div:nth-child(2) > div:hover {
-  border-color: var(--blue-primary);
-  box-shadow: 0 4px 20px rgb(20 115 230 / 10%);
+.related-content-card::after {
+  content: "\2192";
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 16px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+/* Color theming per card position */
+.related-content-card:nth-child(1) { --rc-color: var(--blue-primary); }
+.related-content-card:nth-child(2) { --rc-color: var(--green); }
+.related-content-card:nth-child(3) { --rc-color: var(--violet); }
+
+.related-content-card:hover {
+  border-color: var(--rc-color, var(--blue-primary));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 6%);
   transform: translateY(-2px);
 }
 
-/* Link styling */
-.related-content > div:nth-child(2) > div p:first-child {
-  margin-bottom: 8px;
+.related-content-card:hover::after {
+  color: var(--rc-color, var(--blue-primary));
+  transform: translateX(3px);
 }
 
-.related-content > div:nth-child(2) > div strong a {
-  font-size: 16px;
+.related-content-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--rc-color, var(--blue-primary)) 8%, transparent);
+  color: var(--rc-color, var(--blue-primary));
+}
+
+.related-content-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.related-content-tag {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--blue-primary);
-  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
+  background: color-mix(in srgb, var(--rc-color, var(--blue-primary)) 8%, transparent);
+  color: var(--rc-color, var(--blue-primary));
 }
 
-.related-content > div:nth-child(2) > div strong a:hover {
-  text-decoration: underline;
+.related-content-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* Description */
-.related-content > div:nth-child(2) > div p:last-child {
-  font-size: var(--body-font-size-s);
+.related-content-desc {
+  font-size: 13px;
   color: var(--text-tertiary);
-  line-height: 1.5;
-  margin: 0;
+  line-height: 1.45;
 }
 
-/* Icon before link (emoji-based via ::before or content) */
-.related-content > div:nth-child(2) > div:nth-child(1) strong a::before {
-  content: "\1F4C4 ";
-}
-
-.related-content > div:nth-child(2) > div:nth-child(2) strong a::before {
-  content: "\23F0 ";
-}
-
-.related-content > div:nth-child(2) > div:nth-child(3) strong a::before {
-  content: "\1F4E5 ";
-}
-
-@media (width <= 768px) {
-  .related-content > div:nth-child(2) {
+@media (width <= 900px) {
+  .related-content-grid {
     grid-template-columns: 1fr;
   }
 }

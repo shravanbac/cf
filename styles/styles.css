@@ -419,3 +419,65 @@ main .section.full-width > div {
     font-size: clamp(26px, 5vw, 36px);
   }
 }
+
+/* ===== COMPACT SECTION VARIANT ===== */
+
+/* Use section metadata: style = compact */
+
+main .section.compact {
+  padding: 48px var(--px);
+}
+
+main .section.compact-flush {
+  padding: 0;
+}
+
+/* ===== ARTICLE BODY — NARROW WIDTH VARIANT ===== */
+
+/* Use section metadata: style = article-body */
+
+main .section.article-body > .default-content-wrapper {
+  max-width: 760px;
+}
+
+main .section.article-body h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 40px 0 12px;
+  padding-top: 8px;
+}
+
+main .section.article-body h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 28px 0 8px;
+}
+
+main .section.article-body p {
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+main .section.article-body ul {
+  margin: 0 0 16px 24px;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+main .section.article-body li {
+  margin-bottom: 6px;
+}
+
+main .section.article-body blockquote {
+  margin: 24px 0;
+  padding: 20px 24px;
+  border-left: 3px solid var(--blue-primary);
+  background: var(--blue-bg);
+  border-radius: 0 8px 8px 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  font-style: italic;
+}

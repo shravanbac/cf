@@ -1,55 +1,120 @@
-/* Features Block — product page feature cards */
-
+/* features — card grid with colored top accents */
 .features {
-  padding: clamp(48px, 6vw, 80px) 0;
-  background: var(--bg-alt);
-  border-radius: 0;
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
 }
 
-/* Header row */
-.features > div:first-child {
-  margin-bottom: 32px;
+.features-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 24px;
 }
 
-.features h2 {
-  font-size: var(--heading-font-size-l);
+.features-head h2,
+.features-head h3 {
+  font-size: 22px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
-/* Feature cards grid */
-.features > div:not(:first-child) {
+.features-head > span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+  gap: 16px;
 }
 
-.features > div:not(:first-child) > div {
-  background: var(--bg);
+.features-card {
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 24px;
-  transition: box-shadow 0.2s, border-color 0.2s;
+  padding: 22px 20px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  position: relative;
 }
 
-.features > div:not(:first-child) > div:hover {
+.features-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  border-radius: 10px 10px 0 0;
+  background: var(--card-accent, var(--blue-primary));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.features-card:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 5%);
+  transform: translateY(-2px);
 }
 
-.features > div:not(:first-child) h3 {
-  font-size: var(--heading-font-size-s);
+.features-card:hover::before {
+  opacity: 1;
+}
+
+.features-card:nth-child(4n+1) { --card-accent: var(--blue-primary); }
+.features-card:nth-child(4n+2) { --card-accent: var(--violet); }
+.features-card:nth-child(4n+3) { --card-accent: var(--green); }
+.features-card:nth-child(4n+4) { --card-accent: var(--amber); }
+
+.features-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+}
+
+.features-card:nth-child(4n+1) .features-icon {
+  background: rgb(20 115 230 / 8%);
+  color: var(--blue-primary);
+}
+
+.features-card:nth-child(4n+2) .features-icon {
+  background: rgb(124 58 237 / 8%);
+  color: var(--violet);
+}
+
+.features-card:nth-child(4n+3) .features-icon {
+  background: rgb(45 157 120 / 8%);
+  color: var(--green);
+}
+
+.features-card:nth-child(4n+4) .features-icon {
+  background: rgb(230 134 25 / 8%);
+  color: var(--amber);
+}
+
+.features-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.features-card h3 {
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-.features > div:not(:first-child) p {
-  font-size: var(--body-font-size-s);
-  color: var(--text-secondary);
+.features-card p {
+  font-size: 13px;
+  color: var(--text-tertiary);
   line-height: 1.5;
+  margin: 0;
 }
 
 @media (width <= 600px) {
-  .features > div:not(:first-child) {
+  .features-grid {
     grid-template-columns: 1fr;
   }
 }

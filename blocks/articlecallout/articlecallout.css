@@ -1,0 +1,24 @@
+/* article-callout — highlighted info box */
+.article-callout {
+  margin: 24px 0;
+  padding: 20px 24px;
+  background: rgb(45 157 120 / 6%);
+  border-radius: 8px;
+  border: 1px solid rgb(45 157 120 / 12%);
+}
+
+.article-callout-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.article-callout p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}

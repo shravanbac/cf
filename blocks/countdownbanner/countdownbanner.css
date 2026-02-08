@@ -1,0 +1,46 @@
+/* countdown-banner — red urgency bar at top of page */
+.countdown-banner {
+  background: rgb(220 38 38 / 5%);
+  border-bottom: 1px solid rgb(220 38 38 / 10%);
+  padding: 10px var(--px);
+}
+
+.countdown-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red);
+}
+
+.countdown-banner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: cb-blink 1s ease-in-out infinite;
+}
+
+@keyframes cb-blink {
+  0%,
+  100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.countdown-banner-timer {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-banner.expired {
+  background: rgb(0 0 0 / 4%);
+  border-color: transparent;
+}
+
+.countdown-banner.expired .countdown-banner-inner {
+  color: var(--text-muted);
+}
