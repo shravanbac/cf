@@ -1,0 +1,281 @@
+/* Solution Block — ContentFlow */
+
+.solution {
+  padding: var(--section-py) var(--px);
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+/* Header — 2-column: left heading, right subtitle */
+.solution-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  margin-bottom: 64px;
+  align-items: end;
+}
+
+.solution-header h2 {
+  margin-bottom: 16px;
+}
+
+/* Steps grid */
+.solution-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  position: relative;
+}
+
+/* Connecting line — background track */
+.solution-steps::before {
+  content: "";
+  position: absolute;
+  top: 40px;
+  left: calc(12.5% + 10px);
+  right: calc(12.5% + 10px);
+  height: 2px;
+  background: rgb(0 0 0 / 8%);
+  border-radius: 1px;
+}
+
+/* Animated progress line */
+.sol-progress {
+  position: absolute;
+  top: 40px;
+  height: 2px;
+  left: calc(12.5% + 10px);
+  right: calc(87.5% - 10px);
+  background: linear-gradient(90deg, var(--blue-primary), var(--violet), var(--amber), var(--green));
+  border-radius: 1px;
+  transition: right 0.6s ease;
+  z-index: 1;
+}
+
+/* Pulse dot that travels the line */
+.sol-pulse {
+  position: absolute;
+  top: 36px;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--blue-light);
+  box-shadow: 0 0 12px var(--blue-light);
+  left: calc(12.5% + 10px);
+  opacity: 0;
+  transition: left 0.5s ease, opacity 0.3s, background 0.3s, box-shadow 0.3s;
+}
+
+.sol-pulse.s0 {
+  opacity: 1;
+  left: calc(12.5% + 5px);
+  background: var(--blue-light);
+  box-shadow: 0 0 12px var(--blue-light);
+}
+
+.sol-pulse.s1 {
+  opacity: 1;
+  left: 37.5%;
+  background: var(--violet-light);
+  box-shadow: 0 0 12px var(--violet-light);
+}
+
+.sol-pulse.s2 {
+  opacity: 1;
+  left: calc(62.5% - 5px);
+  background: var(--amber-light);
+  box-shadow: 0 0 12px var(--amber-light);
+}
+
+.sol-pulse.s3 {
+  opacity: 1;
+  left: calc(87.5% - 10px);
+  background: var(--green-light);
+  box-shadow: 0 0 12px var(--green-light);
+}
+
+.sol-pulse.done {
+  opacity: 0;
+}
+
+/* Step cards */
+.sol-step {
+  text-align: center;
+  position: relative;
+  z-index: 3;
+}
+
+.sol-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  transition: transform 0.3s, border-color 0.4s, background 0.4s, box-shadow 0.4s;
+}
+
+.sol-icon svg {
+  width: 32px;
+  height: 32px;
+  transition: opacity 0.3s;
+}
+
+/* Lit (active) shared — placed BEFORE nth-child specifics to satisfy specificity order */
+.sol-step.lit .sol-icon {
+  transform: scale(1.08);
+}
+
+/* Default (dimmed) icon state — nth-child offset: progress=1, pulse=2, steps=3-6 */
+.sol-step:nth-child(3) .sol-icon {
+  background: rgb(20 115 230 / 5%);
+  border-color: rgb(20 115 230 / 12%);
+}
+
+.sol-step:nth-child(4) .sol-icon {
+  background: rgb(124 58 237 / 5%);
+  border-color: rgb(124 58 237 / 12%);
+}
+
+.sol-step:nth-child(5) .sol-icon {
+  background: rgb(217 119 6 / 5%);
+  border-color: rgb(217 119 6 / 12%);
+}
+
+.sol-step:nth-child(6) .sol-icon {
+  background: rgb(45 157 120 / 5%);
+  border-color: rgb(45 157 120 / 12%);
+}
+
+.sol-step:not(.lit) .sol-icon svg {
+  opacity: 0.35;
+}
+
+.sol-step.lit .sol-icon svg {
+  opacity: 1;
+}
+
+/* Lit (active) icon state per step */
+.sol-step.lit:nth-child(3) .sol-icon {
+  background: rgb(20 115 230 / 10%);
+  border-color: rgb(20 115 230 / 25%);
+  box-shadow: 0 0 20px rgb(20 115 230 / 12%);
+}
+
+.sol-step.lit:nth-child(4) .sol-icon {
+  background: rgb(124 58 237 / 10%);
+  border-color: rgb(124 58 237 / 25%);
+  box-shadow: 0 0 20px rgb(124 58 237 / 12%);
+}
+
+.sol-step.lit:nth-child(5) .sol-icon {
+  background: rgb(217 119 6 / 10%);
+  border-color: rgb(217 119 6 / 25%);
+  box-shadow: 0 0 20px rgb(217 119 6 / 12%);
+}
+
+.sol-step.lit:nth-child(6) .sol-icon {
+  background: rgb(45 157 120 / 10%);
+  border-color: rgb(45 157 120 / 25%);
+  box-shadow: 0 0 20px rgb(45 157 120 / 12%);
+}
+
+/* Step number */
+.sol-num {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  transition: opacity 0.3s;
+}
+
+.sol-step:not(.lit) .sol-num {
+  opacity: 0.35;
+}
+
+.sol-step:nth-child(3) .sol-num {
+  color: var(--blue-light);
+}
+
+.sol-step:nth-child(4) .sol-num {
+  color: var(--violet-light);
+}
+
+.sol-step:nth-child(5) .sol-num {
+  color: var(--amber-light);
+}
+
+.sol-step:nth-child(6) .sol-num {
+  color: var(--green-light);
+}
+
+/* Step title & description */
+.sol-step h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: var(--text-tertiary);
+  transition: color 0.3s;
+}
+
+.sol-step.lit h3 {
+  color: var(--text-primary);
+}
+
+.sol-step p {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  max-width: 240px;
+  margin: 0 auto;
+  transition: opacity 0.3s;
+}
+
+.sol-step:not(.lit) p {
+  opacity: 0.35;
+}
+
+.sol-step.lit p {
+  opacity: 1;
+}
+
+/* ===== Responsive ===== */
+@media (width <= 1024px) {
+  .solution-header {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .solution-steps {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  /* Hide animated line elements on tablet */
+  .solution-steps::before,
+  .sol-progress,
+  .sol-pulse {
+    display: none;
+  }
+
+  /* Show all steps fully visible */
+  .sol-step,
+  .sol-step .sol-icon,
+  .sol-step .sol-icon svg,
+  .sol-step .sol-num,
+  .sol-step p {
+    opacity: 1;
+  }
+
+  .sol-step h3 {
+    color: var(--text-primary);
+  }
+}
+
+@media (width <= 640px) {
+  .solution-steps {
+    grid-template-columns: 1fr;
+  }
+}
