@@ -106,9 +106,8 @@ function runSolAnimation(andLoop, isVisible) {
 export default function decorate(block) {
   const rows = [...block.children];
 
-  // Set section ID for anchor navigation
-  const section = block.closest('.section');
-  if (section) section.id = 'solution';
+  // Set block ID for anchor navigation
+  block.id = 'solution';
 
   const labelRow = rows[0];
   const headingRow = rows[1];
