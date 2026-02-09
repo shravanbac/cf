@@ -1,5 +1,6 @@
 /**
- * Product Listing block — reads product-directory.json from GitHub (no preview needed).
+ * Product Listing block — reads product directory from DA.live page via .plain.html
+ * Data source: /product-directory.plain.html
  * @param {Element} block
  */
 export default async function decorate(block) {
@@ -7,9 +8,43 @@ export default async function decorate(block) {
   block.innerHTML = '<p class="product-listing-loading">Loading products…</p>';
 
   try {
-    const resp = await fetch('https://raw.githubusercontent.com/shravanbac/cf/main/product-directory.json');
+    const resp = await fetch('/product-directory.plain.html');
     if (!resp.ok) throw new Error('Product directory not found');
-    const products = await resp.json();
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    // The product-directory block renders as nested divs
+    // Each row: direct child div of the block wrapper
+    const wrapper = doc.querySelector('.product-directory');
+    if (!wrapper) throw new Error('No product-directory block found');
+
+    const rows = [...wrapper.children];
+    const products = rows.map((row) => {
+      const cells = [...row.children];
+      if (cells.length < 2) return null;
+
+      // Image: could be <img>, <picture>, <a>, or plain text URL
+      let image = '';
+      if (cells[3]) {
+        const img = cells[3].querySelector('img');
+        const anchor = cells[3].querySelector('a');
+        if (img) {
+          image = img.src;
+        } else if (anchor) {
+          image = anchor.href || anchor.textContent.trim();
+        } else {
+          image = cells[3].textContent.trim();
+        }
+      }
+
+      return {
+        path: cells[0]?.textContent.trim() || '',
+        title: cells[1]?.textContent.trim() || '',
+        description: cells[2]?.textContent.trim() || '',
+        image,
+        audience: cells[4]?.textContent.trim() || '',
+      };
+    }).filter((p) => p && p.path && p.path.startsWith('/'));
 
     if (!products.length) {
       block.innerHTML = '<p class="product-listing-empty">No products launched yet. Use the <strong>Launch Product</strong> form to create one.</p>';
@@ -17,9 +52,9 @@ export default async function decorate(block) {
     }
 
     // Newest first
-    const reversed = [...products].reverse();
+    products.reverse();
 
-    const cardsHTML = reversed.map((item) => `
+    const cardsHTML = products.map((item) => `
       <a href="${item.path}" class="product-listing-card sr">
         ${item.image ? `<div class="product-listing-card-img"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>` : '<div class="product-listing-card-img product-listing-card-placeholder"></div>'}
         <div class="product-listing-card-body">
@@ -35,7 +70,7 @@ export default async function decorate(block) {
     block.innerHTML = `
       <div class="product-listing-header">
         <h2>All Products</h2>
-        <p class="product-listing-count">${reversed.length} product${reversed.length > 1 ? 's' : ''} launched</p>
+        <p class="product-listing-count">${products.length} product${products.length > 1 ? 's' : ''} launched</p>
       </div>
       <div class="product-listing-grid">${cardsHTML}</div>`;
   } catch (err) {
