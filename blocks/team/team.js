@@ -4,15 +4,9 @@
 const TEAM_MEMBERS = [
   {
     initial: 'P',
-    name: 'Princy',
+    name: 'Princy Jockin',
     role: 'Enterprise Architect',
     desc: 'Led enterprise architecture strategy, ensuring ContentFlow integrates seamlessly with security and scalability across client ecosystems.',
-  },
-  {
-    initial: 'A',
-    name: 'Andreaas',
-    role: 'EDS Architect',
-    desc: 'Designed the Edge Delivery Services architecture — page templates, custom blocks, Admin API integrations, and multi-environment deployment.',
   },
   {
     initial: 'S',
