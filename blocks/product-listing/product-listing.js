@@ -1,6 +1,6 @@
 /**
  * Product Listing block — reads product directory from DA.live page via .plain.html
- * Data source: /product-directory.plain.html (EDS plain content, no auth)
+ * Data source: /product-directory.plain.html
  * @param {Element} block
  */
 export default async function decorate(block) {
@@ -13,22 +13,35 @@ export default async function decorate(block) {
     const html = await resp.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
 
-    // Parse table rows — each <tr> after header is a product
-    const rows = [...doc.querySelectorAll('div > div')];
-    if (rows.length < 1) {
-      block.innerHTML = '<p class="product-listing-empty">No products launched yet. Use the <strong>Launch Product</strong> form to create one.</p>';
-      return;
-    }
+    // The product-directory block renders as nested divs
+    // Each row: direct child div of the block wrapper
+    const wrapper = doc.querySelector('.product-directory');
+    if (!wrapper) throw new Error('No product-directory block found');
 
-    // Each row has 5 cells: path, title, description, image, audience
+    const rows = [...wrapper.children];
     const products = rows.map((row) => {
       const cells = [...row.children];
       if (cells.length < 2) return null;
+
+      // Image: could be <img>, <picture>, <a>, or plain text URL
+      let image = '';
+      if (cells[3]) {
+        const img = cells[3].querySelector('img');
+        const anchor = cells[3].querySelector('a');
+        if (img) {
+          image = img.src;
+        } else if (anchor) {
+          image = anchor.href || anchor.textContent.trim();
+        } else {
+          image = cells[3].textContent.trim();
+        }
+      }
+
       return {
         path: cells[0]?.textContent.trim() || '',
         title: cells[1]?.textContent.trim() || '',
         description: cells[2]?.textContent.trim() || '',
-        image: cells[3]?.querySelector('img')?.src || cells[3]?.textContent.trim() || '',
+        image,
         audience: cells[4]?.textContent.trim() || '',
       };
     }).filter((p) => p && p.path && p.path.startsWith('/'));
@@ -38,7 +51,7 @@ export default async function decorate(block) {
       return;
     }
 
-    // Reverse so newest appear first
+    // Newest first
     products.reverse();
 
     const cardsHTML = products.map((item) => `
