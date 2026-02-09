@@ -1,71 +1,47 @@
 /**
- * Product Listing block — lists all product pages from DA.live list API.
- * Authored rows: none required (self-populating)
+ * Product Listing block — reads product directory from DA.live page via .plain.html
+ * Data source: /product-directory.plain.html (EDS plain content, no auth)
  * @param {Element} block
  */
 export default async function decorate(block) {
   block.textContent = '';
   block.innerHTML = '<p class="product-listing-loading">Loading products…</p>';
 
-  // Extract org/repo from hostname: main--cf--shravanbac.aem.page
-  const { hostname } = window.location;
-  const parts = hostname.split('.')[0].split('--');
-  const repo = parts[1] || 'cf';
-  const org = parts[2] || 'shravanbac';
-
   try {
-    // Fetch product list from DA.live list API
-    const listResp = await fetch(`https://admin.da.live/list/${org}/${repo}/products`);
-    if (!listResp.ok) throw new Error('Failed to load product list');
-    const items = await listResp.json();
+    const resp = await fetch('/product-directory.plain.html');
+    if (!resp.ok) throw new Error('Product directory not found');
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
 
-    // Filter only .html files, exclude index
-    const pages = items.filter((item) => {
-      const name = item.name || '';
-      return name.endsWith('.html') && name !== 'index.html';
-    });
-
-    if (!pages.length) {
+    // Parse table rows — each <tr> after header is a product
+    const rows = [...doc.querySelectorAll('div > div')];
+    if (rows.length < 1) {
       block.innerHTML = '<p class="product-listing-empty">No products launched yet. Use the <strong>Launch Product</strong> form to create one.</p>';
       return;
     }
 
-    // Fetch each product page to extract metadata
-    const cards = await Promise.all(pages.map(async (page) => {
-      const slug = page.name.replace('.html', '');
-      const pagePath = `/products/${slug}`;
+    // Each row has 5 cells: path, title, description, image, audience
+    const products = rows.map((row) => {
+      const cells = [...row.children];
+      if (cells.length < 2) return null;
+      return {
+        path: cells[0]?.textContent.trim() || '',
+        title: cells[1]?.textContent.trim() || '',
+        description: cells[2]?.textContent.trim() || '',
+        image: cells[3]?.querySelector('img')?.src || cells[3]?.textContent.trim() || '',
+        audience: cells[4]?.textContent.trim() || '',
+      };
+    }).filter((p) => p && p.path && p.path.startsWith('/'));
 
-      try {
-        const pageResp = await fetch(pagePath);
-        if (!pageResp.ok) return null;
-        const html = await pageResp.text();
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-
-        const title = doc.querySelector('meta[property="og:title"]')?.content
-          || doc.querySelector('title')?.textContent
-          || slug;
-        const description = doc.querySelector('meta[name="description"]')?.content || '';
-        const image = doc.querySelector('meta[property="og:image"]')?.content || '';
-        const audience = doc.querySelector('meta[name="audience"]')?.content || '';
-
-        return {
-          slug, title, description, image, audience, path: pagePath,
-        };
-      } catch {
-        return {
-          slug, title: slug, description: '', image: '', audience: '', path: pagePath,
-        };
-      }
-    }));
-
-    const validCards = cards.filter(Boolean);
-
-    if (!validCards.length) {
-      block.innerHTML = '<p class="product-listing-empty">No products launched yet.</p>';
+    if (!products.length) {
+      block.innerHTML = '<p class="product-listing-empty">No products launched yet. Use the <strong>Launch Product</strong> form to create one.</p>';
       return;
     }
 
-    const cardsHTML = validCards.map((item) => `
+    // Reverse so newest appear first
+    products.reverse();
+
+    const cardsHTML = products.map((item) => `
       <a href="${item.path}" class="product-listing-card sr">
         ${item.image ? `<div class="product-listing-card-img"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>` : '<div class="product-listing-card-img product-listing-card-placeholder"></div>'}
         <div class="product-listing-card-body">
@@ -81,7 +57,7 @@ export default async function decorate(block) {
     block.innerHTML = `
       <div class="product-listing-header">
         <h2>All Products</h2>
-        <p class="product-listing-count">${validCards.length} product${validCards.length > 1 ? 's' : ''} launched</p>
+        <p class="product-listing-count">${products.length} product${products.length > 1 ? 's' : ''} launched</p>
       </div>
       <div class="product-listing-grid">${cardsHTML}</div>`;
   } catch (err) {
