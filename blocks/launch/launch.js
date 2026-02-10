@@ -202,20 +202,68 @@ export default function decorate(block) {
     if (WORKER_URL) {
       try {
         const result = await submitToWorker(payload);
-        setBtnState(
-          btn,
-          `\u2713 ${payload.productName} launch initiated \u2014 check Workfront`,
-          'var(--green)',
-          false,
-        );
         /* eslint-disable-next-line no-console */
         console.log('[ContentFlow] Launch result:', result);
+
+        // Show success panel with links
+        const formInner = block.querySelector('.launch-form-inner');
+        if (formInner && result.workfrontURL) {
+          formInner.innerHTML = `
+            <div class="launch-success">
+              <div class="launch-success-icon">✓</div>
+              <h3>${payload.productName} launch initiated</h3>
+              <p>Your product page, article, campaign, and brochure are being created. The Workfront project is ready for tracking.</p>
+              <div class="launch-success-links">
+                <a href="${result.workfrontURL}" target="_blank" rel="noopener" class="launch-link launch-link-wf">
+                  <span class="launch-link-icon">📋</span>
+                  <span>
+                    <strong>Open in Workfront</strong>
+                    <small>Track project, review & approve</small>
+                  </span>
+                  <span class="launch-link-arrow">→</span>
+                </a>
+                <a href="${result.daPageURL}" target="_blank" rel="noopener" class="launch-link launch-link-da">
+                  <span class="launch-link-icon">✏️</span>
+                  <span>
+                    <strong>Edit in DA.live</strong>
+                    <small>Review & author the product page</small>
+                  </span>
+                  <span class="launch-link-arrow">→</span>
+                </a>
+                <a href="${result.previewURL}" target="_blank" rel="noopener" class="launch-link launch-link-preview">
+                  <span class="launch-link-icon">👁️</span>
+                  <span>
+                    <strong>Preview Page</strong>
+                    <small>See the live preview on EDS</small>
+                  </span>
+                  <span class="launch-link-arrow">→</span>
+                </a>
+              </div>
+              <button type="button" class="btn-submit btn-relaunch" id="btnRelaunch">
+                ${SEND_SVG} Launch Another Product
+              </button>
+            </div>`;
+          // Relaunch button reloads form
+          block.querySelector('#btnRelaunch')?.addEventListener('click', () => {
+            formInner.innerHTML = buildFormHTML().replace('<div class="form-card sr sr-d2">', '').replace(/<\/div>\s*$/, '');
+            const newBtn = block.querySelector('#btnLaunch');
+            if (newBtn) newBtn.addEventListener('click', btn.clickHandler);
+          });
+        } else {
+          setBtnState(
+            btn,
+            `✓ ${payload.productName} launch initiated — check Workfront`,
+            'var(--green)',
+            false,
+          );
+          setTimeout(() => setBtnState(btn, originalHTML, '', false), 4000);
+        }
       } catch (err) {
-        setBtnState(btn, `\u2716 Error: ${err.message}`, 'var(--red)', false);
+        setBtnState(btn, `✖ Error: ${err.message}`, 'var(--red)', false);
         /* eslint-disable-next-line no-console */
         console.error('[ContentFlow] Launch error:', err);
+        setTimeout(() => setBtnState(btn, originalHTML, '', false), 4000);
       }
-      setTimeout(() => setBtnState(btn, originalHTML, '', false), 4000);
       return;
     }
 
