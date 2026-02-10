@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send For Review</title>
+  <link rel="icon" href="data:,">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; background-color: #f7f9fb; margin: 0; padding: 0; color: #333; line-height: 1.5; }
+
+    #review-card { background-color: #fff; border: 1px solid #d9e1e2; box-shadow: 0 2px 6px rgba(0,0,0,0.1); width: 100%; min-height: 100vh; overflow: hidden; }
+    .header-bar { display: flex; align-items: center; background-color: #1a1a2e; padding: 10px 14px; color: #fff; font-weight: bold; font-size: 1rem; gap: 10px; }
+    .header-logo { font-size: 18px; }
+    .header-title { flex: 1; font-size: 15px; }
+    .content { padding: 16px 20px; }
+
+    .status-message { font-weight: 600; margin-bottom: 16px; padding: 12px 16px; border-radius: 4px; }
+    .status-message.loading { color: #555; font-style: italic; background-color: #f5f5f5; }
+    .status-message.success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+    .status-message.in-review { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; }
+    .status-message.published { color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; }
+    .status-message.error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+
+    .page-details { margin: 16px 0; }
+    .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row.full-width { flex-direction: column; }
+    .detail-row .label { font-weight: 600; color: #1a1a2e; min-width: 130px; flex-shrink: 0; }
+    .detail-row .value { color: #333; word-break: break-word; }
+    .detail-row .value.warning { color: #856404; }
+    .detail-row .value.success { color: #155724; }
+    .detail-row.full-width .value { margin-top: 4px; padding: 8px 12px; background-color: #f9f9f9; border-radius: 4px; font-style: italic; }
+
+    .form-section { margin: 16px 0; padding-top: 16px; border-top: 1px solid #eee; }
+    .form-group { margin-bottom: 16px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { display: block; font-weight: 600; color: #1a1a2e; margin-bottom: 6px; font-size: 14px; }
+    .form-label .required { color: #dc3545; }
+    .form-input, .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 14px; }
+    .form-input:focus, .form-textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    .form-input.error { border-color: #dc3545; }
+    .form-textarea { resize: vertical; min-height: 70px; }
+    .form-hint { font-size: 12px; color: #666; margin-top: 4px; }
+
+    .actions { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; text-decoration: none; transition: all 0.2s ease; border: none; flex: 1; }
+    .btn-primary { background-color: #3b82f6; color: #fff; }
+    .btn-primary:hover { background-color: #2563eb; }
+    .btn-primary:disabled { background-color: #ccc; cursor: not-allowed; }
+    .btn-secondary { background-color: #fff; color: #3b82f6; border: 1px solid #3b82f6; }
+    .btn-secondary:hover { background-color: #eff6ff; }
+
+    .notice { text-align: center; padding: 20px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .debug-toggle { font-size: 12px; color: #666; cursor: pointer; margin-top: 12px; text-decoration: underline; }
+    .debug-panel { margin-top: 12px; padding: 10px; background: #fff8e1; border-radius: 4px; font-size: 10px; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow-y: auto; }
+    
+    .info-note { font-size: 12px; color: #666; margin-top: 12px; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+
+    .wf-link { display: block; margin-top: 12px; text-align: center; }
+    .wf-link a { color: #3b82f6; font-weight: 600; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="details"></div>
+  <script type="module">
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const CONFIG = {
+      // I/O Runtime proxies (hide Fusion webhook credentials)
+      submitProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/send-for-review-proxy',
+      statusProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
+      
+      defaultRef: 'main',
+      emailStorageKey: 'cfr_user_email',
+    };
+
+    let debugLogs = [], currentContext = null, currentAnalysis = null;
+
+    function log(msg, data = null) {
+      const ts = new Date().toISOString().slice(11, 19);
+      console.log(`[SFR ${ts}]`, msg, data || '');
+      debugLogs.push(data ? `[${ts}] ${msg}: ${JSON.stringify(data).slice(0, 200)}` : `[${ts}] ${msg}`);
+    }
+
+    // ============================================
+    // EMAIL STORAGE (convenience only)
+    // ============================================
+    function getStoredEmail() { try { return localStorage.getItem(CONFIG.emailStorageKey) || ''; } catch { return ''; } }
+    function saveEmail(email) { try { localStorage.setItem(CONFIG.emailStorageKey, email); } catch {} }
+
+    // ============================================
+    // STATUS CHECK (via I/O Runtime proxy → Fusion)
+    // ============================================
+    async function checkReviewStatus(ctx) {
+      log('Checking review status via proxy...');
+      
+      try {
+        const response = await fetch(CONFIG.statusProxyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'check-status',
+            pageIdentifier: ctx.pageIdentifier,
+            org: ctx.org,
+            site: ctx.site,
+            ref: ctx.ref,
+            path: ctx.path,
+          }),
+        });
+
+        if (!response.ok) {
+          log('Status check failed', response.status);
+          return null;
+        }
+
+        const data = await response.json();
+        log('Status response', data);
+        return data;
+
+      } catch (err) {
+        log('Status check error', err.message);
+        return null;
+      }
+    }
+
+    // ============================================
+    // CONTEXT DETECTION
+    // ============================================
+    function getContextFromURLParams() {
+      const p = new URLSearchParams(window.location.search);
+      return { ref: p.get('ref') || '', site: p.get('site') || p.get('repo') || '', org: p.get('org') || p.get('owner') || '', path: p.get('path') || '' };
+    }
+
+    function getContextFromReferrer() {
+      if (!document.referrer) return null;
+      try {
+        const url = new URL(document.referrer);
+        const daMatch = url.href.match(/da\.live\/edit#\/([^\/]+)\/([^\/]+)\/?(.*)?/);
+        if (daMatch) return { org: daMatch[1], site: daMatch[2], path: daMatch[3] || 'index', ref: 'main', source: 'da.live-referrer' };
+        const aemMatch = url.host.match(/^([^-]+)--([^-]+)--([^.]+)\.aem\.(page|live)$/);
+        if (aemMatch) return { ref: aemMatch[1], site: aemMatch[2], org: aemMatch[3], path: url.pathname.replace(/^\//, '') || 'index', source: 'aem-referrer' };
+      } catch {}
+      return null;
+    }
+
+    async function getContextFromDASDK() {
+      try {
+        const DA_SDK = await import('https://da.live/nx/utils/sdk.js');
+        const sdk = await DA_SDK.default;
+        if (sdk?.context) return {
+          org: sdk.context.org || sdk.context.owner || '',
+          site: sdk.context.repo || '',
+          ref: sdk.context.ref || 'main',
+          path: sdk.context.path || 'index',
+          email: sdk.context.email || sdk.context.user?.email || '',
+          source: 'da-sdk'
+        };
+      } catch {}
+      return null;
+    }
+
+    async function getFullContext() {
+      const urlParams = getContextFromURLParams();
+      const referrerCtx = getContextFromReferrer();
+      const sdkCtx = await getContextFromDASDK();
+
+      const ctx = {
+        ref: sdkCtx?.ref || referrerCtx?.ref || urlParams.ref || CONFIG.defaultRef,
+        site: sdkCtx?.site || referrerCtx?.site || urlParams.site || '',
+        org: sdkCtx?.org || referrerCtx?.org || urlParams.org || '',
+        path: sdkCtx?.path || referrerCtx?.path || urlParams.path || 'index',
+        email: sdkCtx?.email || '',
+        source: sdkCtx?.source || referrerCtx?.source || 'url-params',
+      };
+
+      if (ctx.path.includes('tools/send-for-review') || ctx.path.includes('send-for-review')) ctx.path = 'index';
+      ctx.path = ctx.path.replace(/^\/+/, '').replace(/\.html?$/, '') || 'index';
+
+      ctx.host = `${ctx.ref}--${ctx.site}--${ctx.org}.aem.page`;
+      ctx.previewUrl = `https://${ctx.host}/${ctx.path}`;
+      ctx.liveUrl = `https://${ctx.ref}--${ctx.site}--${ctx.org}.aem.live/${ctx.path}`;
+      ctx.plainUrl = `https://${ctx.host}/${ctx.path}.plain.html`;
+      ctx.daSourceUrl = `https://admin.da.live/source/${ctx.org}/${ctx.site}/${ctx.path}.html`;
+      ctx.daEditUrl = `https://da.live/edit#/${ctx.org}/${ctx.site}/${ctx.path}`;
+      ctx.env = 'page';
+      
+      // Unique page identifier
+      ctx.pageIdentifier = `${ctx.org}/${ctx.site}/${ctx.path}`;
+
+      // Extract slug from path (e.g., products/pulse-10 → pulse-10)
+      const pathParts = ctx.path.split('/');
+      ctx.slug = pathParts[pathParts.length - 1] || '';
+
+      log('Final context', ctx);
+      return ctx;
+    }
+
+    // ============================================
+    // CONTENT FETCHING & ANALYSIS
+    // ============================================
+    async function fetchContent(ctx) {
+      const strategies = [
+        { url: ctx.previewUrl, source: 'full-page', isPlain: false },
+        { url: ctx.plainUrl, source: 'plain.html', isPlain: true },
+        { url: ctx.daSourceUrl, source: 'da-source', isPlain: true },
+      ];
+      for (const s of strategies) {
+        try {
+          const res = await fetch(s.url, { cache: 'no-store' });
+          if (res.ok) return { html: await res.text(), source: s.source, isPlain: s.isPlain };
+        } catch {}
+      }
+      return null;
+    }
+
+    function analyzeDocument(doc, isPlain) {
+      const root = isPlain ? doc.body : (doc.querySelector('main') || doc.body);
+      const text = root?.textContent || '';
+      const cleanText = text.replace(/\s+/g, ' ').trim();
+      const words = cleanText.split(/\s+/).filter(w => w.length > 0);
+      const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+
+      const contentMetrics = {
+        wordCount: words.length,
+        characterCount: cleanText.length,
+        sentenceCount: sentences.length,
+        paragraphCount: root.querySelectorAll('p').length,
+        readingTimeMinutes: Math.ceil(words.length / 200) || 1,
+      };
+
+      // Headings
+      const headings = [], counts = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 }, headingIssues = [];
+      root.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => {
+        const level = parseInt(h.tagName.charAt(1), 10);
+        counts[h.tagName.toLowerCase()]++;
+        headings.push({ level, tag: h.tagName.toLowerCase(), text: h.textContent?.trim() || '' });
+      });
+      if (counts.h1 === 0) headingIssues.push('Missing H1 heading');
+      else if (counts.h1 > 1) headingIssues.push(`Multiple H1 headings (${counts.h1})`);
+
+      // Blocks
+      const sections = root.querySelectorAll(':scope > div'), blocks = [], blockSummary = {};
+      sections.forEach((section, i) => {
+        section.querySelectorAll(':scope > div[class]').forEach(block => {
+          const name = block.classList[0] || 'unknown';
+          blocks.push({ name, section: i + 1 });
+          blockSummary[name] = (blockSummary[name] || 0) + 1;
+        });
+      });
+
+      // SEO
+      const title = doc.querySelector('title')?.textContent?.trim() || '';
+      const description = doc.querySelector('meta[name="description"]')?.content?.trim() || '';
+      const seoIssues = [];
+      if (!title) seoIssues.push('Missing page title');
+      if (!description) seoIssues.push('Missing meta description');
+
+      // Images
+      const images = root.querySelectorAll('img');
+      let withAlt = 0, withoutAlt = 0;
+      images.forEach(img => { if (img.getAttribute('alt')) withAlt++; else withoutAlt++; });
+
+      return {
+        contentMetrics,
+        headingStructure: { headings, counts, issues: headingIssues },
+        blocks: { totalBlocks: blocks.length, totalSections: sections.length, blocks, blockNames: [...new Set(blocks.map(b => b.name))], blockSummary },
+        seo: { title: { content: title, length: title.length }, metaDescription: { content: description, length: description.length }, issues: seoIssues },
+        accessibility: { images: { total: images.length, withAlt, withoutAlt } },
+      };
+    }
+
+    // ============================================
+    // PAYLOAD BUILDING
+    // ============================================
+    function buildPayload(ctx, analysis, email, notes = '') {
+      const name = ctx.path.split('/').pop() || 'index';
+      let title = analysis.seo?.title?.content || name;
+      if (!title || title === name) {
+        const h1 = analysis.headingStructure?.headings?.find(h => h.level === 1);
+        if (h1) title = h1.text;
+      }
+
+      return {
+        title, name, slug: ctx.slug,
+        path: '/' + ctx.path,
+        previewUrl: ctx.previewUrl,
+        liveUrl: ctx.liveUrl,
+        daEditUrl: ctx.daEditUrl,
+        reviewSubmissionDate: new Date().toISOString(),
+        submittedBy: email || 'unknown',
+        org: ctx.org, site: ctx.site, ref: ctx.ref,
+        source: 'DA.live Library',
+        pageIdentifier: ctx.pageIdentifier,
+        contentMetrics: analysis.contentMetrics,
+        headingStructure: analysis.headingStructure,
+        blocks: analysis.blocks,
+        seo: analysis.seo,
+        accessibility: analysis.accessibility,
+        notes: notes || '',
+      };
+    }
+
+    async function postToProxy(payload) {
+      log('Sending payload via proxy', { slug: payload.slug, path: payload.path });
+      const res = await fetch(CONFIG.submitProxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      log('Proxy response', data);
+      return data;
+    }
+
+    // ============================================
+    // UI RENDERING
+    // ============================================
+    function formatDate(iso) { try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+
+    function renderCard(state) {
+      const details = document.getElementById('details');
+      let content = '';
+      const headerHtml = `<div class="header-bar"><span class="header-logo">⚡</span><span class="header-title">ContentFlow — Send For Review</span></div>`;
+
+      if (state.status === 'loading') {
+        content = `<div class="notice"><div class="spinner"></div><p class="status-message loading">${state.message}</p></div>`;
+      }
+      else if (state.status === 'error') {
+        content = `<div class="notice"><p class="status-message error">${state.message}</p><button id="retry-btn" class="btn btn-primary" style="margin-top:12px;">Retry</button><div class="debug-toggle" id="debug-toggle">Show debug info</div><div class="debug-panel" id="debug-panel" style="display:none;"></div></div>`;
+      }
+      else if (state.status === 'in-review') {
+        const d = state.data;
+        content = `
+          <p class="status-message in-review">Page review is already in progress.</p>
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Title:</span><span class="value">${d.title || currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">Submitted By:</span><span class="value">${d.submittedBy || 'Unknown'}</span></div>
+            <div class="detail-row"><span class="label">Submitted On:</span><span class="value">${d.submittedDate ? formatDate(d.submittedDate) : 'N/A'}</span></div>
+            ${d.notes ? `<div class="detail-row full-width"><span class="label">Notes:</span><span class="value">${d.notes}</span></div>` : ''}
+            ${d.workfrontUrl ? `<div class="wf-link"><a href="${d.workfrontUrl}" target="_blank">View in Workfront →</a></div>` : ''}
+          </div>
+          <div class="actions">
+            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
+            <button id="submit-btn" class="btn btn-primary" disabled title="Review already in progress">Submit for Review</button>
+          </div>
+          <p class="info-note">Complete the current review before submitting a new one.</p>`;
+      }
+      else if (state.status === 'ready') {
+        const a = state.analysis;
+        const seoIssues = a.seo?.issues?.length > 0 ? a.seo.issues.join(', ') : 'None';
+        const seoClass = a.seo?.issues?.length > 0 ? 'warning' : 'success';
+        const blocks = a.blocks?.blockNames?.length > 0 ? a.blocks.blockNames.join(', ') : 'None';
+        const storedEmail = getStoredEmail();
+
+        content = `
+          <p class="status-message loading">Ready to submit for review.</p>
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Title:</span><span class="value">${state.title}</span></div>
+            <div class="detail-row"><span class="label">Path:</span><span class="value">${currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">SEO Issues:</span><span class="value ${seoClass}">${seoIssues}</span></div>
+            <div class="detail-row"><span class="label">Blocks:</span><span class="value">${a.blocks?.totalBlocks || 0} (${blocks})</span></div>
+          </div>
+          <div class="form-section">
+            <div class="form-group">
+              <label class="form-label">Your Email <span class="required">*</span></label>
+              <input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${storedEmail}" required>
+              <div class="form-hint">Required for review tracking</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes / Instructions (Optional)</label>
+              <textarea id="notes-input" class="form-textarea" placeholder="Enter any notes for the reviewer..."></textarea>
+            </div>
+          </div>
+          <div class="actions"><button id="submit-btn" class="btn btn-primary">Submit for Review</button></div>`;
+      }
+      else if (state.status === 'success') {
+        const p = state.payload;
+        const r = state.response || {};
+        content = `
+          <p class="status-message success">Review request submitted successfully!</p>
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Title:</span><span class="value">${p.title}</span></div>
+            <div class="detail-row"><span class="label">Submitter:</span><span class="value">${p.submittedBy}</span></div>
+            <div class="detail-row"><span class="label">Submitted On:</span><span class="value">${formatDate(p.reviewSubmissionDate)}</span></div>
+            ${p.notes ? `<div class="detail-row full-width"><span class="label">Notes:</span><span class="value">${p.notes}</span></div>` : ''}
+            ${r.workfrontURL ? `<div class="wf-link"><a href="${r.workfrontURL}" target="_blank">View Project in Workfront →</a></div>` : ''}
+          </div>
+          <div class="actions">
+            <a href="${p.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
+          </div>
+          <p class="info-note">Review request sent to Workfront. Use "Get Page Status" to check progress.</p>`;
+      }
+
+      details.innerHTML = `<div id="review-card">${headerHtml}<div class="content">${content}</div></div>`;
+
+      // Event listeners
+      document.getElementById('retry-btn')?.addEventListener('click', init);
+      document.getElementById('submit-btn')?.addEventListener('click', handleSubmit);
+      document.getElementById('debug-toggle')?.addEventListener('click', () => {
+        const p = document.getElementById('debug-panel');
+        if (p) { p.style.display = p.style.display === 'none' ? 'block' : 'none'; p.textContent = debugLogs.join('\n'); }
+      });
+    }
+
+    async function handleSubmit() {
+      const emailInput = document.getElementById('email-input');
+      const notesInput = document.getElementById('notes-input');
+      const email = emailInput?.value?.trim() || '';
+      const notes = notesInput?.value?.trim() || '';
+
+      if (!email || !email.includes('@')) {
+        emailInput?.focus();
+        emailInput?.classList.add('error');
+        return;
+      }
+
+      saveEmail(email);
+      renderCard({ status: 'loading', message: 'Submitting review request...' });
+
+      try {
+        const payload = buildPayload(currentContext, currentAnalysis, email, notes);
+        const response = await postToProxy(payload);
+        renderCard({ status: 'success', payload, response });
+      } catch (err) {
+        log('Submit error', err.message);
+        renderCard({ status: 'error', message: `Failed to submit: ${err.message}` });
+      }
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    async function init() {
+      renderCard({ status: 'loading', message: 'Initializing...' });
+      
+      try {
+        currentContext = await getFullContext();
+        if (!currentContext.org || !currentContext.site) {
+          renderCard({ status: 'error', message: 'Could not determine page context. Make sure you have a page open.' });
+          return;
+        }
+
+        // Check status first
+        renderCard({ status: 'loading', message: 'Checking review status...' });
+        const statusResponse = await checkReviewStatus(currentContext);
+        
+        if (statusResponse && statusResponse.status === 'in-review') {
+          log('Review in progress', statusResponse);
+          renderCard({ status: 'in-review', data: statusResponse });
+          return;
+        }
+
+        // No active review — analyze page and show form
+        renderCard({ status: 'loading', message: 'Analyzing page...' });
+        const content = await fetchContent(currentContext);
+        if (!content?.html) {
+          renderCard({ status: 'error', message: 'Could not fetch page content. Make sure the page exists and is previewed.' });
+          return;
+        }
+
+        const doc = new DOMParser().parseFromString(content.html, 'text/html');
+        currentAnalysis = analyzeDocument(doc, content.isPlain);
+
+        const name = currentContext.path.split('/').pop() || 'index';
+        let title = currentAnalysis?.seo?.title?.content || name;
+        if ((!title || title === name) && currentAnalysis?.headingStructure?.headings?.length) {
+          const h1 = currentAnalysis.headingStructure.headings.find(h => h.level === 1);
+          if (h1) title = h1.text;
+        }
+        
+        renderCard({ status: 'ready', title, name, analysis: currentAnalysis });
+        
+      } catch (err) {
+        log('Init error', err.message);
+        renderCard({ status: 'error', message: `Error: ${err.message}` });
+      }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  </script>
+</body>
+</html>

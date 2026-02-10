@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Page Status</title>
+  <link rel="icon" href="data:,">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; background-color: #f7f9fb; margin: 0; padding: 0; color: #333; line-height: 1.5; }
+
+    #status-card { background-color: #fff; border: 1px solid #d9e1e2; box-shadow: 0 2px 6px rgba(0,0,0,0.1); width: 100%; min-height: 100vh; overflow: hidden; }
+    .header-bar { display: flex; align-items: center; background-color: #1a1a2e; padding: 10px 14px; color: #fff; font-weight: bold; font-size: 1rem; gap: 10px; }
+    .header-logo { font-size: 18px; }
+    .header-title { flex: 1; font-size: 15px; }
+    .content { padding: 16px 20px; }
+
+    .status-message { font-weight: 600; margin-bottom: 16px; padding: 12px 16px; border-radius: 4px; }
+    .status-message.loading { color: #555; font-style: italic; background-color: #f5f5f5; }
+    .status-message.in-review { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; }
+    .status-message.no-review { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+    .status-message.approved { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+    .status-message.published { color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; }
+    .status-message.rejected { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+    .status-message.draft { color: #555; background-color: #f5f5f5; border: 1px solid #ddd; }
+    .status-message.error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+
+    .page-details { margin: 16px 0; }
+    .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row.full-width { flex-direction: column; }
+    .detail-row .label { font-weight: 600; color: #1a1a2e; min-width: 130px; flex-shrink: 0; }
+    .detail-row .value { color: #333; word-break: break-word; }
+    .detail-row.full-width .value { margin-top: 4px; padding: 8px 12px; background-color: #f9f9f9; border-radius: 4px; font-style: italic; }
+
+    .actions { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; text-decoration: none; transition: all 0.2s ease; border: none; flex: 1; }
+    .btn-primary { background-color: #3b82f6; color: #fff; }
+    .btn-primary:hover { background-color: #2563eb; }
+    .btn-secondary { background-color: #fff; color: #3b82f6; border: 1px solid #3b82f6; }
+    .btn-secondary:hover { background-color: #eff6ff; }
+
+    .notice { text-align: center; padding: 20px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-note { font-size: 12px; color: #666; margin-top: 12px; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+    
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .status-badge.draft { background: #f5f5f5; color: #555; }
+    .status-badge.in-review { background: #fff3cd; color: #856404; }
+    .status-badge.approved { background: #d4edda; color: #155724; }
+    .status-badge.published { background: #d1ecf1; color: #0c5460; }
+    .status-badge.rejected { background: #f8d7da; color: #721c24; }
+    .status-badge.no-review { background: #e2e8f0; color: #475569; }
+
+    .wf-link { display: block; margin-top: 12px; text-align: center; }
+    .wf-link a { color: #3b82f6; font-weight: 600; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="details"></div>
+  <script type="module">
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const CONFIG = {
+      statusProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
+      defaultRef: 'main',
+    };
+
+    let currentContext = null;
+
+    function log(msg, data = null) {
+      const ts = new Date().toISOString().slice(11, 19);
+      console.log(`[GPS ${ts}]`, msg, data || '');
+    }
+
+    // ============================================
+    // STATUS CHECK (via I/O Runtime proxy → Fusion)
+    // ============================================
+    async function checkReviewStatus(ctx) {
+      log('Checking review status via proxy...');
+      
+      try {
+        const response = await fetch(CONFIG.statusProxyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'check-status',
+            pageIdentifier: ctx.pageIdentifier,
+            slug: ctx.slug,
+            org: ctx.org,
+            site: ctx.site,
+            ref: ctx.ref,
+            path: ctx.path,
+          }),
+        });
+
+        if (!response.ok) {
+          log('Status check failed', response.status);
+          return null;
+        }
+
+        const data = await response.json();
+        log('Status response', data);
+        return data;
+
+      } catch (err) {
+        log('Status check error', err.message);
+        return null;
+      }
+    }
+
+    // ============================================
+    // CONTEXT DETECTION
+    // ============================================
+    function getContextFromURLParams() {
+      const p = new URLSearchParams(window.location.search);
+      return { ref: p.get('ref') || '', site: p.get('site') || p.get('repo') || '', org: p.get('org') || p.get('owner') || '', path: p.get('path') || '' };
+    }
+
+    function getContextFromReferrer() {
+      if (!document.referrer) return null;
+      try {
+        const url = new URL(document.referrer);
+        const daMatch = url.href.match(/da\.live\/edit#\/([^\/]+)\/([^\/]+)\/?(.*)?/);
+        if (daMatch) return { org: daMatch[1], site: daMatch[2], path: daMatch[3] || 'index', ref: 'main', source: 'da.live-referrer' };
+        const aemMatch = url.host.match(/^([^-]+)--([^-]+)--([^.]+)\.aem\.(page|live)$/);
+        if (aemMatch) return { ref: aemMatch[1], site: aemMatch[2], org: aemMatch[3], path: url.pathname.replace(/^\//, '') || 'index', source: 'aem-referrer' };
+      } catch {}
+      return null;
+    }
+
+    async function getContextFromDASDK() {
+      try {
+        const DA_SDK = await import('https://da.live/nx/utils/sdk.js');
+        const sdk = await DA_SDK.default;
+        if (sdk?.context) return {
+          org: sdk.context.org || sdk.context.owner || '',
+          site: sdk.context.repo || '',
+          ref: sdk.context.ref || 'main',
+          path: sdk.context.path || 'index',
+          source: 'da-sdk'
+        };
+      } catch {}
+      return null;
+    }
+
+    async function getFullContext() {
+      const urlParams = getContextFromURLParams();
+      const referrerCtx = getContextFromReferrer();
+      const sdkCtx = await getContextFromDASDK();
+
+      const ctx = {
+        ref: sdkCtx?.ref || referrerCtx?.ref || urlParams.ref || CONFIG.defaultRef,
+        site: sdkCtx?.site || referrerCtx?.site || urlParams.site || '',
+        org: sdkCtx?.org || referrerCtx?.org || urlParams.org || '',
+        path: sdkCtx?.path || referrerCtx?.path || urlParams.path || 'index',
+        source: sdkCtx?.source || referrerCtx?.source || 'url-params',
+      };
+
+      if (ctx.path.includes('tools/') || ctx.path.includes('get-page-status')) ctx.path = 'index';
+      ctx.path = ctx.path.replace(/^\/+/, '').replace(/\.html?$/, '') || 'index';
+
+      ctx.previewUrl = `https://${ctx.ref}--${ctx.site}--${ctx.org}.aem.page/${ctx.path}`;
+      ctx.liveUrl = `https://${ctx.ref}--${ctx.site}--${ctx.org}.aem.live/${ctx.path}`;
+      ctx.pageIdentifier = `${ctx.org}/${ctx.site}/${ctx.path}`;
+
+      // Extract slug
+      const pathParts = ctx.path.split('/');
+      ctx.slug = pathParts[pathParts.length - 1] || '';
+
+      log('Final context', ctx);
+      return ctx;
+    }
+
+    // ============================================
+    // UI RENDERING
+    // ============================================
+    function formatDate(iso) { try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+
+    function getStatusLabel(status) {
+      const map = {
+        'draft': 'Draft',
+        'in-review': 'In Review',
+        'in_review': 'In Review',
+        'approved': 'Approved',
+        'published': 'Published',
+        'rejected': 'Changes Required',
+        'changes_required': 'Changes Required',
+        'none': 'No Review',
+      };
+      return map[status?.toLowerCase()] || status || 'Unknown';
+    }
+
+    function getStatusClass(status) {
+      const s = (status || '').toLowerCase().replace(/_/g, '-');
+      if (s.includes('review')) return 'in-review';
+      if (s.includes('approved')) return 'approved';
+      if (s.includes('published')) return 'published';
+      if (s.includes('reject') || s.includes('change')) return 'rejected';
+      if (s.includes('draft')) return 'draft';
+      return 'no-review';
+    }
+
+    function renderCard(state) {
+      const details = document.getElementById('details');
+      let content = '';
+      const headerHtml = `<div class="header-bar"><span class="header-logo">📋</span><span class="header-title">ContentFlow — Page Status</span></div>`;
+
+      if (state.status === 'loading') {
+        content = `<div class="notice"><div class="spinner"></div><p class="status-message loading">${state.message}</p></div>`;
+      }
+      else if (state.status === 'error') {
+        content = `<div class="notice"><p class="status-message error">${state.message}</p><button id="retry-btn" class="btn btn-primary" style="margin-top:12px;">Retry</button></div>`;
+      }
+      else if (state.status === 'found') {
+        const d = state.data;
+        const statusClass = getStatusClass(d.pageStatus || d.status);
+        const statusLabel = getStatusLabel(d.pageStatus || d.status);
+        
+        content = `
+          <p class="status-message ${statusClass}">${statusLabel === 'In Review' ? 'Page review is in progress.' : statusLabel === 'Approved' ? 'Page has been approved!' : statusLabel === 'Published' ? 'Page has been published.' : statusLabel === 'Changes Required' ? 'Reviewer requested changes.' : 'Review status: ' + statusLabel}</p>
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge ${statusClass}">${statusLabel}</span></span></div>
+            ${d.productName ? `<div class="detail-row"><span class="label">Product:</span><span class="value">${d.productName}</span></div>` : ''}
+            ${d.title ? `<div class="detail-row"><span class="label">Title:</span><span class="value">${d.title}</span></div>` : ''}
+            ${d.submittedBy ? `<div class="detail-row"><span class="label">Submitted By:</span><span class="value">${d.submittedBy}</span></div>` : ''}
+            ${d.submittedDate ? `<div class="detail-row"><span class="label">Submitted On:</span><span class="value">${formatDate(d.submittedDate)}</span></div>` : ''}
+            ${d.requestedBy ? `<div class="detail-row"><span class="label">Requested By:</span><span class="value">${d.requestedBy}</span></div>` : ''}
+            ${d.publishURL ? `<div class="detail-row"><span class="label">Live URL:</span><span class="value"><a href="${d.publishURL}" target="_blank">${d.publishURL}</a></span></div>` : ''}
+            ${d.notes ? `<div class="detail-row full-width"><span class="label">Notes:</span><span class="value">${d.notes}</span></div>` : ''}
+            ${d.workfrontUrl || d.workfrontURL ? `<div class="wf-link"><a href="${d.workfrontUrl || d.workfrontURL}" target="_blank">View Project in Workfront →</a></div>` : ''}
+          </div>
+          <div class="actions">
+            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
+            <button id="refresh-btn" class="btn btn-primary">Refresh Status</button>
+          </div>`;
+      }
+      else if (state.status === 'no-review') {
+        content = `
+          <p class="status-message no-review">No active review found for this page.</p>
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge no-review">No Review</span></span></div>
+            <div class="detail-row"><span class="label">Page ID:</span><span class="value">${currentContext.pageIdentifier}</span></div>
+          </div>
+          <div class="actions">
+            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
+            <button id="refresh-btn" class="btn btn-primary">Refresh Status</button>
+          </div>
+          <p class="info-note">Use "Send For Review" to submit this page for review.</p>`;
+      }
+
+      details.innerHTML = `<div id="status-card">${headerHtml}<div class="content">${content}</div></div>`;
+
+      document.getElementById('retry-btn')?.addEventListener('click', init);
+      document.getElementById('refresh-btn')?.addEventListener('click', init);
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    async function init() {
+      renderCard({ status: 'loading', message: 'Checking page status...' });
+      
+      try {
+        currentContext = await getFullContext();
+        if (!currentContext.org || !currentContext.site) {
+          renderCard({ status: 'error', message: 'Could not determine page context. Make sure you have a page open.' });
+          return;
+        }
+
+        const statusResponse = await checkReviewStatus(currentContext);
+        
+        if (!statusResponse) {
+          renderCard({ status: 'error', message: 'Failed to check status. Please try again.' });
+          return;
+        }
+
+        if (statusResponse.status === 'none' || statusResponse.status === 'not-found') {
+          renderCard({ status: 'no-review' });
+        } else {
+          // Any status from Workfront (draft, in-review, approved, published, rejected)
+          renderCard({ status: 'found', data: statusResponse });
+        }
+        
+      } catch (err) {
+        log('Init error', err.message);
+        renderCard({ status: 'error', message: `Error: ${err.message}` });
+      }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  </script>
+</body>
+</html>
