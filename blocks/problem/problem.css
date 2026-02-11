@@ -1,4 +1,4 @@
-/* Problem Block — ContentFlow */
+/* Problem Block — Content Workflow */
 
 .problem {
   padding: var(--section-py) var(--px);
@@ -17,12 +17,12 @@
 
 .problem-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
 .problem-card {
-  padding: 36px 32px;
+  padding: 32px 28px;
   border-radius: 12px;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -34,18 +34,21 @@
   transform: translateY(-4px);
 }
 
-.problem-stat {
-  font-size: 40px;
-  font-weight: 800;
-  letter-spacing: -1.5px;
-  line-height: 1;
-  margin-bottom: 12px;
-  color: var(--red);
+.problem-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgb(227 72 80 / 6%);
+  border: 1px solid rgb(227 72 80 / 10%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
 }
 
 .problem-card h3 {
   font-size: 18px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .problem-card p {

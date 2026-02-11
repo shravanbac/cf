@@ -115,8 +115,8 @@ export default function decorate(block) {
 
   const labelText = labelRow ? labelRow.textContent.trim() : 'The Solution';
   const headingEl = headingRow ? headingRow.querySelector('h1, h2, h3') : null;
-  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>One request.<br><span class="gradient-text">Everything automated.</span></h2>';
-  const subtitleText = subtitleRow ? subtitleRow.textContent.trim() : '';
+  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>One workflow.<br><span class="gradient-text">Author. Review. Publish.</span></h2>';
+  const subtitleText = subtitleRow ? subtitleRow.textContent.trim() : 'Content Workflow connects DA.live authoring to Workfront governance and EDS publishing — so every page goes through a proper review before it goes live.';
 
   block.textContent = '';
   block.innerHTML = `
