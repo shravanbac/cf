@@ -58,6 +58,7 @@ function buildFormHTML() {
             <option>DevOps</option>
           </select>
         </div>
+        <input type="hidden" data-field="campaignType" value="Standard (24 hours)">
         <div class="fg">
           <label>Requested By <span class="req">*</span></label>
           <input type="text" class="fi" data-field="requestedBy" value="Shravan Bachu">
