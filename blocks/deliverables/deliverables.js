@@ -34,20 +34,6 @@ const DELIVERABLE_CARDS = [
       <div class="mock-line" style="width:65%"></div>`,
   },
   {
-    url: 'sbtechlabs.com/campaigns/pulse-flash',
-    badge: 'Time-Bound',
-    badgeStyle: 'del-badge-cyan',
-    title: 'Campaign Page',
-    desc: 'Scheduled publish with automatic unpublish. Set lifecycle, forget it.',
-    preview: `
-      <div class="del-countdown">02:00</div>
-      <div class="del-expires">Auto-Expires</div>
-      <div class="mock-line" style="width:50%;margin:0 auto 6px"></div>
-      <div class="mock-line" style="width:35%;margin:0 auto 14px"></div>
-      <div class="del-pill"></div>`,
-    previewStyle: 'text-align:center;padding-top:24px',
-  },
-  {
     url: 'sbtechlabs.com/resources/pulse-brochure.pdf',
     badge: 'Auto-Generated',
     badgeStyle: '',
@@ -98,7 +84,7 @@ export default function decorate(block) {
 
   const labelText = labelRow ? labelRow.textContent.trim() : 'Auto-Generated Assets';
   const headingEl = headingRow ? headingRow.querySelector('h1, h2, h3') : null;
-  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>One form. Four deliverables.</h2>';
+  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>One Workflow. Three deliverables.</h2>';
   const subtitleText = subtitleRow ? subtitleRow.textContent.trim() : '';
 
   const cardsHTML = DELIVERABLE_CARDS.map((card, i) => {

@@ -4,31 +4,31 @@
 const PHASES = [
   {
     num: 'Phase 1',
-    name: 'Discovery',
-    label: 'Phase 1 — Discovery',
-    title: 'Identifying the Gap',
-    desc: 'Analyzed content workflows across multiple EDS implementations. 80% of launch delays came from disconnected review processes. Teams were using 4+ tools just to get content from draft to published — email for approvals, Slack for status, spreadsheets for tracking, and manual publishing.',
+    name: 'DA.live Today',
+    label: 'Phase 1 — DA.live Today',
+    title: 'The Authoring Revolution',
+    desc: 'DA.live has changed how content teams author for Edge Delivery Services. Browser-based, collaborative, and browser-agnostic — it removed the Chrome-only Sidekick dependency and made EDS authoring accessible to everyone. Organizations are rapidly adopting it as their primary authoring surface.',
   },
   {
     num: 'Phase 2',
-    name: 'Architecture',
-    label: 'Phase 2 — Architecture',
-    title: 'Designing the Integration Layer',
-    desc: 'Architected a secure, serverless solution using I/O Runtime as proxy, Fusion for orchestration, and EDS Admin API for publishing. The key insight: Workfront could serve as the governance hub while DA.live remained the authoring surface — connected through Fusion webhooks and custom Library plugins.',
+    name: 'The Gap',
+    label: 'Phase 2 — The Governance Gap',
+    title: 'No Review, No Approval, No Control',
+    desc: 'DA.live has no built-in review or approval workflow. Authors can preview and publish without any oversight. There is no integration with Workfront or any enterprise workflow tool. Status tracking, audit trails, and governance are completely absent — the approval and workflow layer is broken.',
   },
   {
     num: 'Phase 3',
-    name: 'Build',
-    label: 'Phase 3 — Build',
-    title: 'Developing the Accelerator',
-    desc: 'Custom DA.live Library plugins for review workflows, Fusion scenarios with environment routing, auto-generation pipelines, and Firefly integration for hero image creation. Each component was built to be modular and importable into any EDS project.',
+    name: 'The Bridge',
+    label: 'Phase 3 — Building the Bridge',
+    title: 'Connecting DA.live to Workfront via Fusion',
+    desc: 'Content Workflow creates the missing governance layer. Custom DA.live Library plugins let authors trigger reviews and check status without leaving the editor. Fusion scenarios connect to Workfront for project management, task-based approvals, and decision routing — all secured through I/O Runtime proxy endpoints.',
   },
   {
     num: 'Phase 4',
-    name: 'Ship',
-    label: 'Phase 4 — Ship',
-    title: 'Live & Battle-Tested',
-    desc: 'Deployed across real enterprise workflows with open-source code and importable Fusion templates. The accelerator handles the full content lifecycle — from a single form submission through automatic page creation, review assignment, SEO scoring, approval, publishing, and scheduled expiry.',
+    name: 'Auto-Publish',
+    label: 'Phase 4 — Automated Publishing',
+    title: 'Approve Once, Publish Everywhere',
+    desc: 'When a reviewer approves in Workfront, Fusion automatically publishes the page via the EDS Admin API. Rejected pages route back to the author with comments. Live URLs are tracked in Workfront. The full content lifecycle — from authoring to governance to publishing — runs without a single manual handoff.',
   },
 ];
 
@@ -36,12 +36,12 @@ const PHASES = [
  * Prose paragraphs + quote — hardcoded.
  */
 const PROSE = [
-  'Enterprise clients adopting AEM Edge Delivery Services kept hitting the same wall. DA.live delivered exceptional authoring speed, but the moment content needed governance — reviews, approvals, compliance checks, scheduled publishing — teams fell back to email chains, Slack threads, and spreadsheets.',
-  'At Cognizant, we saw this pattern across industries — healthcare needing documented approval chains, financial services requiring compliance gates, and marketing teams running campaigns that demanded precise timing.',
-  'ContentFlow was designed to be the missing integration layer — connecting DA.live\'s authoring experience to Workfront\'s workflow engine through Fusion automation, I/O Runtime security, and Firefly-powered image generation.',
+  'DA.live is the latest trend in EDS authoring — and for good reason. It gives content teams a browser-based, collaborative WYSIWYG editor that works on any browser, removing the Chrome-only Sidekick dependency that held back adoption. Organizations are moving to DA.live fast.',
+  'But there is a critical gap. DA.live has no built-in governance layer. There is no review process, no approval workflow, no integration with enterprise workflow tools like Workfront. Authors can preview and publish without any oversight. The approval and workflow story is completely broken.',
+  'Content Workflow solves this by bridging DA.live authoring to Workfront governance and EDS publishing automation — all orchestrated through Fusion, secured by I/O Runtime, with AI-powered page creation via Google Imagen.',
 ];
 
-const QUOTE = '"What if a customer could fill out one form and get a product page, a blog article, a campaign with auto-expiry, and a downloadable brochure — all without a single manual handoff?"';
+const QUOTE = '"DA.live is transforming how teams author for EDS — but without governance, review, and automated publishing, enterprise adoption hits a wall. Content Workflow builds the missing bridge."';
 
 /**
  * Shows a specific phase panel by index.
@@ -76,7 +76,7 @@ export default function decorate(block) {
 
   const labelText = labelRow ? labelRow.textContent.trim() : 'The Background';
   const headingEl = headingRow ? headingRow.querySelector('h1, h2, h3') : null;
-  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>How ContentFlow was born.</h2>';
+  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>Why DA.live needs governance.</h2>';
 
   const proseHTML = PROSE.map((p) => `<p>${p}</p>`).join('');
 

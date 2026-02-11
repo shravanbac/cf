@@ -7,7 +7,7 @@ const TECH_ITEMS = [
   { abbr: 'Wf', name: 'Workfront', role: 'Govern' },
   { abbr: 'Fn', name: 'Fusion', role: 'Automate' },
   { abbr: 'Io', name: 'I/O Runtime', role: 'Secure' },
-  { abbr: 'Fi', name: 'Firefly', role: 'Generate' },
+  { abbr: 'Im', name: 'Google Imagen', role: 'Generate' },
 ];
 
 /**

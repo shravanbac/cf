@@ -1,4 +1,4 @@
-/* Hero Block — ContentFlow */
+/* Hero Block — Content Workflow */
 
 /* Reset EDS wrappers for full-bleed hero */
 main .section.hero-section {
@@ -370,7 +370,7 @@ a.btn-outline:hover {
 /* Deliverables output row */
 .pl-output {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin-bottom: 8px;
 }

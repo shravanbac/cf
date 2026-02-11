@@ -20,7 +20,7 @@ export default function decorate(block) {
   // Extract content
   const labelText = labelRow ? labelRow.textContent.trim() : 'The Problem';
   const headingEl = headingRow ? headingRow.querySelector('h1, h2, h3') : null;
-  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>Product launches are broken.</h2>';
+  const headingHTML = headingEl ? headingEl.outerHTML : '<h2>DA.live authoring lacks governance.</h2>';
   const subtitleText = subtitleRow ? subtitleRow.textContent.trim() : '';
 
   // Build cards

@@ -5,14 +5,12 @@ import { animTimeout, clearAnimTimeouts } from '../../scripts/scripts.js';
  */
 const PIPELINE_STEPS = [
   { name: 'Create Workfront Project', tool: 'Fusion', time: '0.3s' },
-  { name: 'Generate Product Image', tool: 'Firefly', time: '1.2s' },
+  { name: 'Generate Product Image', tool: 'Imagen', time: '1.2s' },
   { name: 'Create Product Page', tool: 'EDS API', time: '0.8s' },
   { name: 'Create Blog Article', tool: 'EDS API', time: '0.6s' },
-  { name: 'Create Campaign', tool: 'EDS API', time: '0.5s' },
   { name: 'Generate Brochure PDF', tool: 'PDF Services', time: '0.9s' },
   { name: 'Assign Review Tasks', tool: 'Workfront', time: '0.4s' },
   { name: 'Publish Product Page', tool: 'Fusion', time: '0.3s' },
-  { name: 'Unpublish Campaign', tool: 'Fusion', time: '0.2s' },
 ];
 
 const PIPELINE_ASSETS = [
@@ -21,9 +19,6 @@ const PIPELINE_ASSETS = [
   },
   {
     label: 'Article', color: '#B07CE8', bg: 'rgb(146 86 217 / 8%)', icon: 'pen',
-  },
-  {
-    label: 'Campaign', color: '#0FB5AE', bg: 'rgb(15 181 174 / 8%)', icon: 'clock',
   },
   {
     label: 'Brochure', color: '#F5A623', bg: 'rgb(230 134 25 / 8%)', icon: 'book',
@@ -71,7 +66,7 @@ function buildPipelineHTML() {
           <span style="background:#FFBD2E"></span>
           <span style="background:#28C840"></span>
         </div>
-        <div class="pipeline-title">ContentFlow Pipeline</div>
+        <div class="pipeline-title">Content Workflow Pipeline</div>
         <div class="pipeline-live"><div class="pipeline-live-dot"></div>Live</div>
       </div>
       <div class="pipeline-body">
@@ -132,9 +127,7 @@ function runPipeline(andLoop, isVisible) {
   delay += 600;
 
   // Asset reveal mapping: step index -> asset index
-  const assetMap = {
-    2: 0, 3: 1, 4: 2, 5: 3,
-  };
+  const assetMap = { 2: 0, 3: 1, 4: 2 };
 
   steps.forEach((step, i) => {
     const time = step.getAttribute('data-time');
@@ -200,7 +193,7 @@ export default function decorate(block) {
   // Extract text content
   const eyebrowHTML = eyebrowRow ? eyebrowRow.querySelector('div')?.innerHTML || '' : '';
   const headingEl = headingRow ? headingRow.querySelector('h1, h2, h3') : null;
-  const headingHTML = headingEl ? headingEl.outerHTML : '<h1>ContentFlow</h1>';
+  const headingHTML = headingEl ? headingEl.outerHTML : '<h1>Content Workflow</h1>';
   const descHTML = descRow ? descRow.querySelector('div')?.innerHTML || '' : '';
 
   // Extract buttons

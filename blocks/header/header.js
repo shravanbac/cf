@@ -1,7 +1,7 @@
 import { getMetadata } from '../../scripts/aem.js';
 
 /**
- * Decorates the header block — ContentFlow navigation.
+ * Decorates the header block — Content Workflow navigation.
  * Fetches /nav authored in DA.live.
  * @param {Element} block The header block element
  */
@@ -26,7 +26,7 @@ export default async function decorate(block) {
     <div class="nav-inner">
       <a href="/" class="nav-brand">
         <div class="nav-logo">CF</div>
-        <span class="nav-name">ContentFlow</span>
+        <span class="nav-name">Content Workflow</span>
       </a>
       <ul class="nav-links" id="navLinks">
         ${links.map((a) => `<li><a href="${a.getAttribute('href')}">${a.textContent}</a></li>`).join('')}
