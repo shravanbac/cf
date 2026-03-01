@@ -18,11 +18,13 @@
     .status-message { font-weight: 600; margin-bottom: 16px; padding: 12px 16px; border-radius: 4px; }
     .status-message.loading { color: #555; font-style: italic; background-color: #f5f5f5; }
     .status-message.in-review { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; }
-    .status-message.no-review { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+    .status-message.no-review { color: #475569; background-color: #f1f5f9; border: 1px solid #cbd5e1; }
     .status-message.approved { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
     .status-message.published { color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; }
+    .status-message.changes-requested { color: #e65100; background-color: #fff3e0; border: 1px solid #ffe0b2; }
     .status-message.rejected { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
-    .status-message.draft { color: #555; background-color: #f5f5f5; border: 1px solid #ddd; }
+    .status-message.authoring { color: #555; background-color: #f5f5f5; border: 1px solid #ddd; }
+    .status-message.scheduled { color: #1a237e; background-color: #e8eaf6; border: 1px solid #c5cae9; }
     .status-message.error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
 
     .page-details { margin: 16px 0; }
@@ -32,6 +34,16 @@
     .detail-row .label { font-weight: 600; color: #1a1a2e; min-width: 130px; flex-shrink: 0; }
     .detail-row .value { color: #333; word-break: break-word; }
     .detail-row.full-width .value { margin-top: 4px; padding: 8px 12px; background-color: #f9f9f9; border-radius: 4px; font-style: italic; }
+
+    .feedback-box { margin: 16px 0; padding: 14px 16px; border-radius: 6px; border-left: 4px solid #e65100; background: #fff8f0; }
+    .feedback-box .feedback-header { font-weight: 700; font-size: 13px; color: #e65100; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .feedback-box .feedback-text { font-size: 14px; color: #333; line-height: 1.6; }
+    .feedback-box.approved { border-left-color: #155724; background: #f0faf2; }
+    .feedback-box.approved .feedback-header { color: #155724; }
+    .feedback-box.rejected { border-left-color: #721c24; background: #fef2f2; }
+    .feedback-box.rejected .feedback-header { color: #721c24; }
+
+    .rejection-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: #fee2e2; color: #991b1b; }
 
     .actions { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; }
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; text-decoration: none; transition: all 0.2s ease; border: none; flex: 1; }
@@ -45,25 +57,32 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .info-note { font-size: 12px; color: #666; margin-top: 12px; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 4px; }
-    
+
     .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-    .status-badge.draft { background: #f5f5f5; color: #555; }
+    .status-badge.authoring { background: #f5f5f5; color: #555; }
     .status-badge.in-review { background: #fff3cd; color: #856404; }
     .status-badge.approved { background: #d4edda; color: #155724; }
     .status-badge.published { background: #d1ecf1; color: #0c5460; }
+    .status-badge.changes-requested { background: #fff3e0; color: #e65100; }
     .status-badge.rejected { background: #f8d7da; color: #721c24; }
+    .status-badge.scheduled { background: #e8eaf6; color: #1a237e; }
     .status-badge.no-review { background: #e2e8f0; color: #475569; }
 
     .wf-link { display: block; margin-top: 12px; text-align: center; }
     .wf-link a { color: #3b82f6; font-weight: 600; font-size: 14px; }
+
+    .timeline { margin: 16px 0; padding: 12px 16px; background: #f8f9fa; border-radius: 6px; }
+    .timeline-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; padding: 4px 0; }
+    .timeline-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .timeline-item .dot.submitted { background: #3b82f6; }
+    .timeline-item .dot.reviewed { background: #f59e0b; }
+    .timeline-item .dot.approved { background: #10b981; }
+    .timeline-item .dot.rejected { background: #ef4444; }
   </style>
 </head>
 <body>
   <div id="details"></div>
   <script type="module">
-    // ============================================
-    // CONFIGURATION
-    // ============================================
     const CONFIG = {
       statusProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
       defaultRef: 'main',
@@ -81,7 +100,6 @@
     // ============================================
     async function checkReviewStatus(ctx) {
       log('Checking review status via proxy...');
-      
       try {
         const response = await fetch(CONFIG.statusProxyUrl, {
           method: 'POST',
@@ -96,16 +114,10 @@
             path: ctx.path,
           }),
         });
-
-        if (!response.ok) {
-          log('Status check failed', response.status);
-          return null;
-        }
-
+        if (!response.ok) { log('Status check failed', response.status); return null; }
         const data = await response.json();
         log('Status response', data);
         return data;
-
       } catch (err) {
         log('Status check error', err.message);
         return null;
@@ -167,7 +179,6 @@
       ctx.liveUrl = `https://${ctx.ref}--${ctx.site}--${ctx.org}.aem.live/${ctx.path}`;
       ctx.pageIdentifier = `${ctx.org}/${ctx.site}/${ctx.path}`;
 
-      // Extract slug
       const pathParts = ctx.path.split('/');
       ctx.slug = pathParts[pathParts.length - 1] || '';
 
@@ -176,34 +187,63 @@
     }
 
     // ============================================
-    // UI RENDERING
+    // STATUS HELPERS
     // ============================================
-    function formatDate(iso) { try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+    function normalizeStatus(raw) {
+      const s = (raw || '').toLowerCase().trim().replace(/[\s_]+/g, '-');
+      // Map decision text to status
+      if (s.includes('not-relevant') || s === 'rejected') return 'rejected';
+      if (s.includes('changes') || s === 'changes-requested' || s === 'changes-required') return 'changes-requested';
+      if (s.includes('approved')) return 'approved';
+      if (s.includes('in-review') || s === 'in-review') return 'in-review';
+      if (s.includes('published')) return 'published';
+      if (s.includes('scheduled')) return 'scheduled';
+      if (s.includes('authoring') || s === 'draft') return 'authoring';
+      return s || 'unknown';
+    }
 
     function getStatusLabel(status) {
       const map = {
-        'draft': 'Draft',
+        'authoring': 'Authoring',
         'in-review': 'In Review',
-        'in_review': 'In Review',
         'approved': 'Approved',
+        'changes-requested': 'Changes Requested',
+        'rejected': 'Not Relevant',
         'published': 'Published',
-        'rejected': 'Changes Required',
-        'changes_required': 'Changes Required',
+        'scheduled': 'Scheduled',
         'none': 'No Review',
+        'unknown': 'Unknown',
       };
-      return map[status?.toLowerCase()] || status || 'Unknown';
+      return map[status] || status || 'Unknown';
     }
 
-    function getStatusClass(status) {
-      const s = (status || '').toLowerCase().replace(/_/g, '-');
-      if (s.includes('review')) return 'in-review';
-      if (s.includes('approved')) return 'approved';
-      if (s.includes('published')) return 'published';
-      if (s.includes('reject') || s.includes('change')) return 'rejected';
-      if (s.includes('draft')) return 'draft';
-      return 'no-review';
+    function getStatusMessage(status) {
+      const map = {
+        'authoring': 'Page is currently being authored.',
+        'in-review': 'Page review is in progress.',
+        'approved': 'Page has been approved and is ready to publish!',
+        'changes-requested': 'Reviewer has requested changes. Please review the feedback below.',
+        'rejected': 'Page was marked as Not Relevant and the project has been closed.',
+        'published': 'Page has been published and is live.',
+        'scheduled': 'Page is scheduled for publishing.',
+      };
+      return map[status] || `Review status: ${getStatusLabel(status)}`;
     }
 
+    function formatDate(iso) {
+      if (!iso) return '';
+      try { return new Date(iso).toLocaleString(); } catch { return iso; }
+    }
+
+    function cleanFeedback(text) {
+      if (!text) return '';
+      // Strip "Proof Comment: " prefix if present
+      return text.replace(/^Proof Comment:\s*/i, '').trim();
+    }
+
+    // ============================================
+    // UI RENDERING
+    // ============================================
     function renderCard(state) {
       const details = document.getElementById('details');
       let content = '';
@@ -215,43 +255,82 @@
       else if (state.status === 'error') {
         content = `<div class="notice"><p class="status-message error">${state.message}</p><button id="retry-btn" class="btn btn-primary" style="margin-top:12px;">Retry</button></div>`;
       }
-      else if (state.status === 'found') {
-        const d = state.data;
-        const statusClass = getStatusClass(d.pageStatus || d.status);
-        const statusLabel = getStatusLabel(d.pageStatus || d.status);
-        
-        content = `
-          <p class="status-message ${statusClass}">${statusLabel === 'In Review' ? 'Page review is in progress.' : statusLabel === 'Approved' ? 'Page has been approved!' : statusLabel === 'Published' ? 'Page has been published.' : statusLabel === 'Changes Required' ? 'Reviewer requested changes.' : 'Review status: ' + statusLabel}</p>
-          <div class="page-details">
-            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
-            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge ${statusClass}">${statusLabel}</span></span></div>
-            ${d.productName ? `<div class="detail-row"><span class="label">Product:</span><span class="value">${d.productName}</span></div>` : ''}
-            ${d.title ? `<div class="detail-row"><span class="label">Title:</span><span class="value">${d.title}</span></div>` : ''}
-            ${d.submittedBy ? `<div class="detail-row"><span class="label">Submitted By:</span><span class="value">${d.submittedBy}</span></div>` : ''}
-            ${d.submittedDate ? `<div class="detail-row"><span class="label">Submitted On:</span><span class="value">${formatDate(d.submittedDate)}</span></div>` : ''}
-            ${d.requestedBy ? `<div class="detail-row"><span class="label">Requested By:</span><span class="value">${d.requestedBy}</span></div>` : ''}
-            ${d.publishURL ? `<div class="detail-row"><span class="label">Live URL:</span><span class="value"><a href="${d.publishURL}" target="_blank">${d.publishURL}</a></span></div>` : ''}
-            ${d.notes ? `<div class="detail-row full-width"><span class="label">Notes:</span><span class="value">${d.notes}</span></div>` : ''}
-            ${d.workfrontUrl || d.workfrontURL ? `<div class="wf-link"><a href="${d.workfrontUrl || d.workfrontURL}" target="_blank">View Project in Workfront →</a></div>` : ''}
-          </div>
-          <div class="actions">
-            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
-            <button id="refresh-btn" class="btn btn-primary">Refresh Status</button>
-          </div>`;
-      }
       else if (state.status === 'no-review') {
         content = `
           <p class="status-message no-review">No active review found for this page.</p>
           <div class="page-details">
             <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
             <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge no-review">No Review</span></span></div>
-            <div class="detail-row"><span class="label">Page ID:</span><span class="value">${currentContext.pageIdentifier}</span></div>
           </div>
           <div class="actions">
             <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
             <button id="refresh-btn" class="btn btn-primary">Refresh Status</button>
           </div>
           <p class="info-note">Use "Send For Review" to submit this page for review.</p>`;
+      }
+      else if (state.status === 'found') {
+        const d = state.data;
+        const status = normalizeStatus(d.status);
+        const statusLabel = getStatusLabel(status);
+        const statusMsg = getStatusMessage(status);
+        const feedback = cleanFeedback(d.reviewerFeedback);
+        const rejCount = parseInt(d.rejectionCount) || 0;
+        const liveUrl = d.liveUrl || '';
+        const workfrontUrl = d.workfrontUrl || '';
+
+        // Reviewer feedback box
+        let feedbackHtml = '';
+        if (feedback) {
+          const fbClass = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : '';
+          feedbackHtml = `
+            <div class="feedback-box ${fbClass}">
+              <div class="feedback-header">Reviewer Feedback</div>
+              <div class="feedback-text">${feedback}</div>
+            </div>`;
+        }
+
+        // Timeline
+        let timelineHtml = '';
+        const hasTimeline = d.submittedDate || d.lastReviewDate;
+        if (hasTimeline) {
+          let items = '';
+          if (d.submittedDate) {
+            items += `<div class="timeline-item"><span class="dot submitted"></span>Submitted: ${formatDate(d.submittedDate)}</div>`;
+          }
+          if (d.lastReviewDate) {
+            const dotClass = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'reviewed';
+            items += `<div class="timeline-item"><span class="dot ${dotClass}"></span>Reviewed: ${formatDate(d.lastReviewDate)}</div>`;
+          }
+          timelineHtml = `<div class="timeline">${items}</div>`;
+        }
+
+        // Rejection count badge
+        const rejBadgeHtml = rejCount > 0
+          ? `<span class="rejection-badge">↻ ${rejCount} revision${rejCount > 1 ? 's' : ''}</span>`
+          : '';
+
+        content = `
+          <p class="status-message ${status}">${statusMsg}</p>
+          ${feedbackHtml}
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge ${status}">${statusLabel}</span> ${rejBadgeHtml}</span></div>
+            ${d.title ? `<div class="detail-row"><span class="label">Title:</span><span class="value">${d.title}</span></div>` : ''}
+            ${d.submittedBy ? `<div class="detail-row"><span class="label">Submitted By:</span><span class="value">${d.submittedBy}</span></div>` : ''}
+            ${d.submittedDate ? `<div class="detail-row"><span class="label">Submitted:</span><span class="value">${formatDate(d.submittedDate)}</span></div>` : ''}
+            ${d.lastReviewDate ? `<div class="detail-row"><span class="label">Last Reviewed:</span><span class="value">${formatDate(d.lastReviewDate)}</span></div>` : ''}
+            ${d.reviewerDecision ? `<div class="detail-row"><span class="label">Decision:</span><span class="value">${d.reviewerDecision}</span></div>` : ''}
+            ${liveUrl ? `<div class="detail-row"><span class="label">Live URL:</span><span class="value"><a href="${liveUrl}" target="_blank">${liveUrl}</a></span></div>` : ''}
+            ${d.notes ? `<div class="detail-row full-width"><span class="label">Author Notes:</span><span class="value">${d.notes}</span></div>` : ''}
+            ${workfrontUrl ? `<div class="wf-link"><a href="${workfrontUrl}" target="_blank">View Project in Workfront →</a></div>` : ''}
+          </div>
+          ${timelineHtml}
+          <div class="actions">
+            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
+            <button id="refresh-btn" class="btn btn-primary">Refresh Status</button>
+          </div>
+          ${status === 'changes-requested' ? '<p class="info-note">Make your changes, then use "Send For Review" to resubmit.</p>' : ''}
+          ${status === 'approved' ? '<p class="info-note">Open the "Publish Page" task in Workfront to publish.</p>' : ''}`;
       }
 
       details.innerHTML = `<div id="status-card">${headerHtml}<div class="content">${content}</div></div>`;
@@ -265,7 +344,7 @@
     // ============================================
     async function init() {
       renderCard({ status: 'loading', message: 'Checking page status...' });
-      
+
       try {
         currentContext = await getFullContext();
         if (!currentContext.org || !currentContext.site) {
@@ -274,7 +353,7 @@
         }
 
         const statusResponse = await checkReviewStatus(currentContext);
-        
+
         if (!statusResponse) {
           renderCard({ status: 'error', message: 'Failed to check status. Please try again.' });
           return;
@@ -283,10 +362,9 @@
         if (statusResponse.status === 'none' || statusResponse.status === 'not-found') {
           renderCard({ status: 'no-review' });
         } else {
-          // Any status from Workfront (draft, in-review, approved, published, rejected)
           renderCard({ status: 'found', data: statusResponse });
         }
-        
+
       } catch (err) {
         log('Init error', err.message);
         renderCard({ status: 'error', message: `Error: ${err.message}` });

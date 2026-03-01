@@ -18,8 +18,9 @@
     .status-message { font-weight: 600; margin-bottom: 16px; padding: 12px 16px; border-radius: 4px; }
     .status-message.loading { color: #555; font-style: italic; background-color: #f5f5f5; }
     .status-message.success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
-    .status-message.in-review { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; }
-    .status-message.published { color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; }
+    .status-message.blocked { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; }
+    .status-message.changes-requested { color: #e65100; background-color: #fff3e0; border: 1px solid #ffe0b2; }
+    .status-message.rejected { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
     .status-message.error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
 
     .page-details { margin: 16px 0; }
@@ -31,6 +32,20 @@
     .detail-row .value.warning { color: #856404; }
     .detail-row .value.success { color: #155724; }
     .detail-row.full-width .value { margin-top: 4px; padding: 8px 12px; background-color: #f9f9f9; border-radius: 4px; font-style: italic; }
+
+    .feedback-box { margin: 16px 0; padding: 14px 16px; border-radius: 6px; border-left: 4px solid #e65100; background: #fff8f0; }
+    .feedback-box .feedback-header { font-weight: 700; font-size: 13px; color: #e65100; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .feedback-box .feedback-text { font-size: 14px; color: #333; line-height: 1.6; }
+
+    .rejection-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: #fee2e2; color: #991b1b; }
+
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .status-badge.in-review { background: #fff3cd; color: #856404; }
+    .status-badge.approved { background: #d4edda; color: #155724; }
+    .status-badge.published { background: #d1ecf1; color: #0c5460; }
+    .status-badge.changes-requested { background: #fff3e0; color: #e65100; }
+    .status-badge.rejected { background: #f8d7da; color: #721c24; }
+    .status-badge.scheduled { background: #e8eaf6; color: #1a237e; }
 
     .form-section { margin: 16px 0; padding-top: 16px; border-top: 1px solid #eee; }
     .form-group { margin-bottom: 16px; }
@@ -50,6 +65,8 @@
     .btn-primary:disabled { background-color: #ccc; cursor: not-allowed; }
     .btn-secondary { background-color: #fff; color: #3b82f6; border: 1px solid #3b82f6; }
     .btn-secondary:hover { background-color: #eff6ff; }
+    .btn-warning { background-color: #f59e0b; color: #fff; }
+    .btn-warning:hover { background-color: #d97706; }
 
     .notice { text-align: center; padding: 20px; }
     .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
@@ -57,7 +74,7 @@
 
     .debug-toggle { font-size: 12px; color: #666; cursor: pointer; margin-top: 12px; text-decoration: underline; }
     .debug-panel { margin-top: 12px; padding: 10px; background: #fff8e1; border-radius: 4px; font-size: 10px; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow-y: auto; }
-    
+
     .info-note { font-size: 12px; color: #666; margin-top: 12px; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 4px; }
 
     .wf-link { display: block; margin-top: 12px; text-align: center; }
@@ -71,15 +88,18 @@
     // CONFIGURATION
     // ============================================
     const CONFIG = {
-      // I/O Runtime proxies (hide Fusion webhook credentials)
       submitProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/send-for-review-proxy',
       statusProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
-      
       defaultRef: 'main',
       emailStorageKey: 'cfr_user_email',
     };
 
-    let debugLogs = [], currentContext = null, currentAnalysis = null;
+    // Statuses where "Send for Review" should be BLOCKED
+    const BLOCKED_STATUSES = ['in-review', 'approved', 'published', 'scheduled'];
+    // Statuses where re-submission is allowed (with feedback shown)
+    const RESUBMIT_STATUSES = ['changes-requested'];
+
+    let debugLogs = [], currentContext = null, currentAnalysis = null, currentStatusData = null;
 
     function log(msg, data = null) {
       const ts = new Date().toISOString().slice(11, 19);
@@ -88,17 +108,44 @@
     }
 
     // ============================================
-    // EMAIL STORAGE (convenience only)
+    // HELPERS
     // ============================================
     function getStoredEmail() { try { return localStorage.getItem(CONFIG.emailStorageKey) || ''; } catch { return ''; } }
     function saveEmail(email) { try { localStorage.setItem(CONFIG.emailStorageKey, email); } catch {} }
 
+    function normalizeStatus(raw) {
+      const s = (raw || '').toLowerCase().trim().replace(/[\s_]+/g, '-');
+      if (s.includes('not-relevant') || s === 'rejected') return 'rejected';
+      if (s.includes('changes') || s === 'changes-requested' || s === 'changes-required') return 'changes-requested';
+      if (s.includes('approved')) return 'approved';
+      if (s.includes('in-review') || s === 'in-review') return 'in-review';
+      if (s.includes('published')) return 'published';
+      if (s.includes('scheduled')) return 'scheduled';
+      if (s.includes('authoring') || s === 'draft') return 'authoring';
+      return s || 'none';
+    }
+
+    function getStatusLabel(status) {
+      const map = {
+        'authoring': 'Authoring', 'in-review': 'In Review', 'approved': 'Approved',
+        'changes-requested': 'Changes Requested', 'rejected': 'Not Relevant',
+        'published': 'Published', 'scheduled': 'Scheduled',
+      };
+      return map[status] || status || 'Unknown';
+    }
+
+    function formatDate(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+
+    function cleanFeedback(text) {
+      if (!text) return '';
+      return text.replace(/^Proof Comment:\s*/i, '').trim();
+    }
+
     // ============================================
-    // STATUS CHECK (via I/O Runtime proxy → Fusion)
+    // STATUS CHECK
     // ============================================
     async function checkReviewStatus(ctx) {
       log('Checking review status via proxy...');
-      
       try {
         const response = await fetch(CONFIG.statusProxyUrl, {
           method: 'POST',
@@ -106,22 +153,17 @@
           body: JSON.stringify({
             action: 'check-status',
             pageIdentifier: ctx.pageIdentifier,
+            slug: ctx.slug,
             org: ctx.org,
             site: ctx.site,
             ref: ctx.ref,
             path: ctx.path,
           }),
         });
-
-        if (!response.ok) {
-          log('Status check failed', response.status);
-          return null;
-        }
-
+        if (!response.ok) { log('Status check failed', response.status); return null; }
         const data = await response.json();
         log('Status response', data);
         return data;
-
       } catch (err) {
         log('Status check error', err.message);
         return null;
@@ -188,11 +230,8 @@
       ctx.daSourceUrl = `https://admin.da.live/source/${ctx.org}/${ctx.site}/${ctx.path}.html`;
       ctx.daEditUrl = `https://da.live/edit#/${ctx.org}/${ctx.site}/${ctx.path}`;
       ctx.env = 'page';
-      
-      // Unique page identifier
       ctx.pageIdentifier = `${ctx.org}/${ctx.site}/${ctx.path}`;
 
-      // Extract slug from path (e.g., products/pulse-10 → pulse-10)
       const pathParts = ctx.path.split('/');
       ctx.slug = pathParts[pathParts.length - 1] || '';
 
@@ -233,7 +272,6 @@
         readingTimeMinutes: Math.ceil(words.length / 200) || 1,
       };
 
-      // Headings
       const headings = [], counts = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 }, headingIssues = [];
       root.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => {
         const level = parseInt(h.tagName.charAt(1), 10);
@@ -243,7 +281,6 @@
       if (counts.h1 === 0) headingIssues.push('Missing H1 heading');
       else if (counts.h1 > 1) headingIssues.push(`Multiple H1 headings (${counts.h1})`);
 
-      // Blocks
       const sections = root.querySelectorAll(':scope > div'), blocks = [], blockSummary = {};
       sections.forEach((section, i) => {
         section.querySelectorAll(':scope > div[class]').forEach(block => {
@@ -253,14 +290,12 @@
         });
       });
 
-      // SEO
       const title = doc.querySelector('title')?.textContent?.trim() || '';
       const description = doc.querySelector('meta[name="description"]')?.content?.trim() || '';
       const seoIssues = [];
       if (!title) seoIssues.push('Missing page title');
       if (!description) seoIssues.push('Missing meta description');
 
-      // Images
       const images = root.querySelectorAll('img');
       let withAlt = 0, withoutAlt = 0;
       images.forEach(img => { if (img.getAttribute('alt')) withAlt++; else withoutAlt++; });
@@ -284,7 +319,6 @@
         const h1 = analysis.headingStructure?.headings?.find(h => h.level === 1);
         if (h1) title = h1.text;
       }
-
       return {
         title, name, slug: ctx.slug,
         path: '/' + ctx.path,
@@ -321,8 +355,6 @@
     // ============================================
     // UI RENDERING
     // ============================================
-    function formatDate(iso) { try { return new Date(iso).toLocaleString(); } catch { return iso; } }
-
     function renderCard(state) {
       const details = document.getElementById('details');
       let content = '';
@@ -334,23 +366,88 @@
       else if (state.status === 'error') {
         content = `<div class="notice"><p class="status-message error">${state.message}</p><button id="retry-btn" class="btn btn-primary" style="margin-top:12px;">Retry</button><div class="debug-toggle" id="debug-toggle">Show debug info</div><div class="debug-panel" id="debug-panel" style="display:none;"></div></div>`;
       }
-      else if (state.status === 'in-review') {
+      // ── BLOCKED: in-review, approved, published, scheduled ──
+      else if (state.status === 'blocked') {
         const d = state.data;
+        const status = normalizeStatus(d.status);
+        const statusLabel = getStatusLabel(status);
+
+        const blockMessages = {
+          'in-review': 'This page is currently under review. Please wait for the reviewer to complete their assessment.',
+          'approved': 'This page has been approved. Open the Publish task in Workfront to publish it.',
+          'published': 'This page has already been published.',
+          'scheduled': 'This page is scheduled for publishing.',
+        };
+
         content = `
-          <p class="status-message in-review">Page review is already in progress.</p>
+          <p class="status-message blocked">${blockMessages[status] || 'Review submission is not available.'}</p>
           <div class="page-details">
-            <div class="detail-row"><span class="label">Title:</span><span class="value">${d.title || currentContext.path}</span></div>
-            <div class="detail-row"><span class="label">Submitted By:</span><span class="value">${d.submittedBy || 'Unknown'}</span></div>
-            <div class="detail-row"><span class="label">Submitted On:</span><span class="value">${d.submittedDate ? formatDate(d.submittedDate) : 'N/A'}</span></div>
-            ${d.notes ? `<div class="detail-row full-width"><span class="label">Notes:</span><span class="value">${d.notes}</span></div>` : ''}
+            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge ${status}">${statusLabel}</span></span></div>
+            ${d.title ? `<div class="detail-row"><span class="label">Title:</span><span class="value">${d.title}</span></div>` : ''}
+            ${d.submittedBy ? `<div class="detail-row"><span class="label">Submitted By:</span><span class="value">${d.submittedBy}</span></div>` : ''}
+            ${d.submittedDate ? `<div class="detail-row"><span class="label">Submitted:</span><span class="value">${formatDate(d.submittedDate)}</span></div>` : ''}
             ${d.workfrontUrl ? `<div class="wf-link"><a href="${d.workfrontUrl}" target="_blank">View in Workfront →</a></div>` : ''}
           </div>
           <div class="actions">
             <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
-            <button id="submit-btn" class="btn btn-primary" disabled title="Review already in progress">Submit for Review</button>
-          </div>
-          <p class="info-note">Complete the current review before submitting a new one.</p>`;
+            <button class="btn btn-primary" disabled>Submit for Review</button>
+          </div>`;
       }
+      // ── REJECTED (Not Relevant) — terminal, no resubmit ──
+      else if (state.status === 'rejected') {
+        const d = state.data;
+        const feedback = cleanFeedback(d.reviewerFeedback);
+
+        content = `
+          <p class="status-message rejected">This page was marked as "Not Relevant" and the project has been closed.</p>
+          ${feedback ? `<div class="feedback-box"><div class="feedback-header">Reviewer Feedback</div><div class="feedback-text">${feedback}</div></div>` : ''}
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge rejected">Not Relevant</span></span></div>
+            ${d.workfrontUrl ? `<div class="wf-link"><a href="${d.workfrontUrl}" target="_blank">View in Workfront →</a></div>` : ''}
+          </div>
+          <div class="actions">
+            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
+            <button class="btn btn-primary" disabled>Submit for Review</button>
+          </div>
+          <p class="info-note">To resubmit, create a new project via the Product Launch form.</p>`;
+      }
+      // ── CHANGES REQUESTED — show feedback + allow resubmit ──
+      else if (state.status === 'changes-requested') {
+        const d = state.data;
+        const a = state.analysis;
+        const feedback = cleanFeedback(d.reviewerFeedback);
+        const rejCount = parseInt(d.rejectionCount) || 0;
+        const storedEmail = d.submittedBy || getStoredEmail();
+        const seoIssues = a.seo?.issues?.length > 0 ? a.seo.issues.join(', ') : 'None';
+        const seoClass = a.seo?.issues?.length > 0 ? 'warning' : 'success';
+        const blocks = a.blocks?.blockNames?.length > 0 ? a.blocks.blockNames.join(', ') : 'None';
+
+        content = `
+          <p class="status-message changes-requested">Reviewer has requested changes. Review the feedback, make edits, then resubmit.</p>
+          ${feedback ? `<div class="feedback-box"><div class="feedback-header">Reviewer Feedback</div><div class="feedback-text">${feedback}</div></div>` : ''}
+          <div class="page-details">
+            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
+            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge changes-requested">Changes Requested</span> ${rejCount > 0 ? `<span class="rejection-badge">↻ ${rejCount} revision${rejCount > 1 ? 's' : ''}</span>` : ''}</span></div>
+            <div class="detail-row"><span class="label">Title:</span><span class="value">${state.title}</span></div>
+            <div class="detail-row"><span class="label">SEO Issues:</span><span class="value ${seoClass}">${seoIssues}</span></div>
+            <div class="detail-row"><span class="label">Blocks:</span><span class="value">${a.blocks?.totalBlocks || 0} (${blocks})</span></div>
+            ${d.lastReviewDate ? `<div class="detail-row"><span class="label">Last Reviewed:</span><span class="value">${formatDate(d.lastReviewDate)}</span></div>` : ''}
+          </div>
+          <div class="form-section">
+            <div class="form-group">
+              <label class="form-label">Your Email <span class="required">*</span></label>
+              <input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${storedEmail}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes / What Changed</label>
+              <textarea id="notes-input" class="form-textarea" placeholder="Describe the changes you made in response to the feedback..."></textarea>
+            </div>
+          </div>
+          <div class="actions"><button id="submit-btn" class="btn btn-warning">Resubmit for Review</button></div>`;
+      }
+      // ── READY — first-time submission ──
       else if (state.status === 'ready') {
         const a = state.analysis;
         const seoIssues = a.seo?.issues?.length > 0 ? a.seo.issues.join(', ') : 'None';
@@ -379,6 +476,7 @@
           </div>
           <div class="actions"><button id="submit-btn" class="btn btn-primary">Submit for Review</button></div>`;
       }
+      // ── SUCCESS ──
       else if (state.status === 'success') {
         const p = state.payload;
         const r = state.response || {};
@@ -438,7 +536,7 @@
     // ============================================
     async function init() {
       renderCard({ status: 'loading', message: 'Initializing...' });
-      
+
       try {
         currentContext = await getFullContext();
         if (!currentContext.org || !currentContext.site) {
@@ -446,17 +544,54 @@
           return;
         }
 
-        // Check status first
+        // Step 1: Check current status
         renderCard({ status: 'loading', message: 'Checking review status...' });
         const statusResponse = await checkReviewStatus(currentContext);
-        
-        if (statusResponse && statusResponse.status === 'in-review') {
-          log('Review in progress', statusResponse);
-          renderCard({ status: 'in-review', data: statusResponse });
-          return;
+        currentStatusData = statusResponse;
+
+        if (statusResponse && statusResponse.status && statusResponse.status !== 'none' && statusResponse.status !== 'not-found') {
+          const status = normalizeStatus(statusResponse.status);
+
+          // BLOCKED statuses — show info, disable submit
+          if (BLOCKED_STATUSES.includes(status)) {
+            log('Submission blocked', { status });
+            renderCard({ status: 'blocked', data: statusResponse });
+            return;
+          }
+
+          // REJECTED (Not Relevant) — terminal, no resubmit
+          if (status === 'rejected') {
+            log('Project rejected/closed', { status });
+            renderCard({ status: 'rejected', data: statusResponse });
+            return;
+          }
+
+          // CHANGES REQUESTED — show feedback, allow resubmit
+          if (RESUBMIT_STATUSES.includes(status)) {
+            log('Changes requested, analyzing page for resubmit...');
+            renderCard({ status: 'loading', message: 'Analyzing page for resubmission...' });
+
+            const content = await fetchContent(currentContext);
+            if (!content?.html) {
+              renderCard({ status: 'error', message: 'Could not fetch page content.' });
+              return;
+            }
+            const doc = new DOMParser().parseFromString(content.html, 'text/html');
+            currentAnalysis = analyzeDocument(doc, content.isPlain);
+
+            const name = currentContext.path.split('/').pop() || 'index';
+            let title = currentAnalysis?.seo?.title?.content || name;
+            if ((!title || title === name) && currentAnalysis?.headingStructure?.headings?.length) {
+              const h1 = currentAnalysis.headingStructure.headings.find(h => h.level === 1);
+              if (h1) title = h1.text;
+            }
+
+            renderCard({ status: 'changes-requested', data: statusResponse, analysis: currentAnalysis, title });
+            return;
+          }
         }
 
-        // No active review — analyze page and show form
+        // Step 2: No active review or authoring — show fresh submission form
         renderCard({ status: 'loading', message: 'Analyzing page...' });
         const content = await fetchContent(currentContext);
         if (!content?.html) {
@@ -473,9 +608,9 @@
           const h1 = currentAnalysis.headingStructure.headings.find(h => h.level === 1);
           if (h1) title = h1.text;
         }
-        
+
         renderCard({ status: 'ready', title, name, analysis: currentAnalysis });
-        
+
       } catch (err) {
         log('Init error', err.message);
         renderCard({ status: 'error', message: `Error: ${err.message}` });
