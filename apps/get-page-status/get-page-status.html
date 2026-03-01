@@ -278,10 +278,10 @@
         const liveUrl = d.liveUrl || '';
         const workfrontUrl = d.workfrontUrl || '';
 
-        // Reviewer feedback box
+        // Reviewer feedback box — only show for actionable statuses
         let feedbackHtml = '';
-        if (feedback) {
-          const fbClass = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : '';
+        if (feedback && (status === 'changes-requested' || status === 'rejected')) {
+          const fbClass = status === 'rejected' ? 'rejected' : '';
           feedbackHtml = `
             <div class="feedback-box ${fbClass}">
               <div class="feedback-header">Reviewer Feedback</div>
