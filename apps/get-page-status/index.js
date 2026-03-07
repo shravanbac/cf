@@ -11,10 +11,9 @@
 // CONFIGURATION - Using Adobe I/O Runtime Proxy
 // ============================================
 const CONFIG = Object.freeze({
-  // Single unified router (handles both submit and status, routes by environment)
-  statusProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
+  proxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
   defaultRef: 'main',
-  logoPath: '/icons/logo.svg',
+  logoPath: './assets/logo.png',
   pluginTitle: 'ContentFlow — Get Page Status',
 });
 
@@ -127,7 +126,7 @@ function cleanFeedback(text) {
 async function checkReviewStatus(ctx) {
   log('Checking review status via proxy');
   try {
-    const response = await fetch(CONFIG.statusProxyUrl, {
+    const response = await fetch(CONFIG.proxyUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -302,11 +301,20 @@ function renderPriority(priority) {
   return `<span class="${cssClass}">${escapeHtml(priority)}</span>`;
 }
 
+function closeModal() {
+  try {
+    window.parent.postMessage({ type: 'close' }, '*');
+  } catch {
+    // ignore
+  }
+  window.close();
+}
+
 function renderHeader() {
   const logoHtml = CONFIG.logoPath
     ? `<img src="${CONFIG.logoPath}" alt="Logo" class="logo" onerror="this.style.display='none'" />`
     : '';
-  return `<div class="header-bar">${logoHtml}<span class="header-title">${CONFIG.pluginTitle}</span></div>`;
+  return `<div class="header-bar">${logoHtml}<span class="header-title">${CONFIG.pluginTitle}</span><button class="modal-close" id="modal-close-btn" title="Close">&times;</button></div>`;
 }
 
 function renderLoading(message) {
@@ -782,6 +790,7 @@ async function init() {
 function attachEventListeners() {
   document.getElementById('retry-btn')?.addEventListener('click', init);
   document.getElementById('debug-toggle')?.addEventListener('click', toggleDebugPanel);
+  document.getElementById('modal-close-btn')?.addEventListener('click', closeModal);
 }
 
 function toggleDebugPanel() {

@@ -390,3 +390,67 @@ body {
   color: var(--agt-utility-dark-blue-800);
   font-weight: var(--agt-font-weight-semibold);
 }
+
+/* ============================================
+   MODAL OVERLAY
+   ============================================ */
+
+body {
+  background: transparent;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--agt-spacing-2xl, 24px) var(--agt-spacing-xl, 16px);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.modal-dialog {
+  background: var(--agt-background-bg-base-white, #fff);
+  border-radius: var(--agt-roundness-main, 4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.header-bar {
+  position: relative;
+}
+
+.header-bar .modal-close {
+  position: absolute;
+  right: var(--agt-spacing-md, 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--agt-background-bg-base-white, #fff);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+
+.header-bar .modal-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Remove full-page height — modal sizes to content */
+.review-card,
+.status-card {
+  min-height: unset;
+  border: none;
+  box-shadow: none;
+}

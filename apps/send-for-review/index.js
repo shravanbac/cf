@@ -10,11 +10,10 @@
 // CONFIGURATION - Using Adobe I/O Runtime Proxy
 // ============================================
 const CONFIG = Object.freeze({
-  // Single unified router (handles both submit and status, routes by environment)
   proxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/send-for-review-proxy',
   emailStorageKey: 'sfr_user_email',
   defaultRef: 'main',
-  logoPath: '/icons/logo.svg',
+  logoPath: './assets/logo.png',
   pluginTitle: 'ContentFlow — Send For Review',
   seo: {
     titleMaxLength: 60,
@@ -820,11 +819,21 @@ function renderPriorityOptions(selectedPriority = null) {
   }).join('');
 }
 
+function closeModal() {
+  // Try DA.live SDK close first, fall back to postMessage, then window.close
+  try {
+    window.parent.postMessage({ type: 'close' }, '*');
+  } catch {
+    // ignore
+  }
+  window.close();
+}
+
 function renderHeader() {
   const logoHtml = CONFIG.logoPath
     ? `<img src="${CONFIG.logoPath}" alt="Logo" class="logo" onerror="this.style.display='none'" />`
     : '';
-  return `<div class="header-bar">${logoHtml}<span class="header-title">${CONFIG.pluginTitle}</span></div>`;
+  return `<div class="header-bar">${logoHtml}<span class="header-title">${CONFIG.pluginTitle}</span><button class="modal-close" id="modal-close-btn" title="Close">&times;</button></div>`;
 }
 
 function renderLoading(message) {
@@ -1426,6 +1435,7 @@ function attachEventListeners() {
   document.getElementById('retry-btn')?.addEventListener('click', init);
   document.getElementById('submit-btn')?.addEventListener('click', handleSubmit);
   document.getElementById('debug-toggle')?.addEventListener('click', toggleDebugPanel);
+  document.getElementById('modal-close-btn')?.addEventListener('click', closeModal);
 
   // Attach character counter for notes input
   const notesInput = document.getElementById('notes-input');
