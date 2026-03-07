@@ -37,6 +37,11 @@ body {
   margin-right: var(--agt-spacing-md);
 }
 
+.header-bar .header-title {
+  flex: 1;
+  font-size: var(--agt-font-size-15, 15px);
+}
+
 .content {
   padding: var(--agt-spacing-xl) var(--agt-spacing-2xl);
 }

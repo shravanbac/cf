@@ -13,8 +13,9 @@
 const CONFIG = Object.freeze({
   // Single unified router (handles both submit and status, routes by environment)
   statusProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
-  proxyUrl: '',
   defaultRef: 'main',
+  logoPath: '/icons/logo.svg',
+  pluginTitle: 'ContentFlow — Get Page Status',
 });
 
 const STATUS = Object.freeze({
@@ -126,7 +127,7 @@ function cleanFeedback(text) {
 async function checkReviewStatus(ctx) {
   log('Checking review status via proxy');
   try {
-    const response = await fetch(CONFIG.proxyUrl, {
+    const response = await fetch(CONFIG.statusProxyUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -302,7 +303,10 @@ function renderPriority(priority) {
 }
 
 function renderHeader() {
-  return `<div class="header-bar"><img src="${CONFIG.logoPath}" alt="Logo" class="logo" /></div>`;
+  const logoHtml = CONFIG.logoPath
+    ? `<img src="${CONFIG.logoPath}" alt="Logo" class="logo" onerror="this.style.display='none'" />`
+    : '';
+  return `<div class="header-bar">${logoHtml}<span class="header-title">${CONFIG.pluginTitle}</span></div>`;
 }
 
 function renderLoading(message) {

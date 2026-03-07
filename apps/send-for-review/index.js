@@ -13,6 +13,9 @@ const CONFIG = Object.freeze({
   // Single unified router (handles both submit and status, routes by environment)
   proxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/send-for-review-proxy',
   emailStorageKey: 'sfr_user_email',
+  defaultRef: 'main',
+  logoPath: '/icons/logo.svg',
+  pluginTitle: 'ContentFlow — Send For Review',
   seo: {
     titleMaxLength: 60,
     descriptionMaxLength: 200,
@@ -818,7 +821,10 @@ function renderPriorityOptions(selectedPriority = null) {
 }
 
 function renderHeader() {
-  return `<div class="header-bar"><img src="${CONFIG.logoPath}" alt="Logo" class="logo" /></div>`;
+  const logoHtml = CONFIG.logoPath
+    ? `<img src="${CONFIG.logoPath}" alt="Logo" class="logo" onerror="this.style.display='none'" />`
+    : '';
+  return `<div class="header-bar">${logoHtml}<span class="header-title">${CONFIG.pluginTitle}</span></div>`;
 }
 
 function renderLoading(message) {
