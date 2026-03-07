@@ -1,624 +1,1240 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Send For Review</title>
   <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://www.agilent.com/styles/lib-styles.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; background-color: #f7f9fb; margin: 0; padding: 0; color: #333; line-height: 1.5; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    #review-card { background-color: #fff; border: 1px solid #d9e1e2; box-shadow: 0 2px 6px rgba(0,0,0,0.1); width: 100%; min-height: 100vh; overflow: hidden; }
-    .header-bar { display: flex; align-items: center; background-color: #1a1a2e; padding: 10px 14px; color: #fff; font-weight: bold; font-size: 1rem; gap: 10px; }
-    .header-logo { font-size: 18px; }
-    .header-title { flex: 1; font-size: 15px; }
-    .content { padding: 16px 20px; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--agt-background-bg-base-primary);
+  color: var(--agt-text-icons-tx-base-title);
+  line-height: 1.5;
+}
 
-    .status-message { font-weight: 600; margin-bottom: 16px; padding: 12px 16px; border-radius: 4px; }
-    .status-message.loading { color: #555; font-style: italic; background-color: #f5f5f5; }
-    .status-message.success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
-    .status-message.blocked { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; }
-    .status-message.changes-requested { color: #e65100; background-color: #fff3e0; border: 1px solid #ffe0b2; }
-    .status-message.rejected { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
-    .status-message.error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+.review-card {
+  background-color: var(--agt-background-bg-base-white);
+  border: 1px solid var(--agt-utility-navy-grey-300);
+  box-shadow: var(--agt-shadow-md);
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
 
-    .page-details { margin: 16px 0; }
-    .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-    .detail-row:last-child { border-bottom: none; }
-    .detail-row.full-width { flex-direction: column; }
-    .detail-row .label { font-weight: 600; color: #1a1a2e; min-width: 130px; flex-shrink: 0; }
-    .detail-row .value { color: #333; word-break: break-word; }
-    .detail-row .value.warning { color: #856404; }
-    .detail-row .value.success { color: #155724; }
-    .detail-row.full-width .value { margin-top: 4px; padding: 8px 12px; background-color: #f9f9f9; border-radius: 4px; font-style: italic; }
+.header-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--agt-background-bg-brand);
+  padding: var(--agt-spacing-md) var(--agt-spacing-lg);
+  color: var(--agt-background-bg-base-white);
+  font-weight: var(--agt-font-weight-bold);
+  font-size: var(--agt-font-size-16);
+}
 
-    .feedback-box { margin: 16px 0; padding: 14px 16px; border-radius: 6px; border-left: 4px solid #e65100; background: #fff8f0; }
-    .feedback-box .feedback-header { font-weight: 700; font-size: 13px; color: #e65100; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .feedback-box .feedback-text { font-size: 14px; color: #333; line-height: 1.6; }
+.header-bar .logo {
+  height: var(--agt-spacing-5xl);
+  margin-right: var(--agt-spacing-md);
+}
 
-    .rejection-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: #fee2e2; color: #991b1b; }
+.header-bar .header-title {
+  flex: 1;
+  font-size: var(--agt-font-size-15, 15px);
+}
 
-    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-    .status-badge.in-review { background: #fff3cd; color: #856404; }
-    .status-badge.approved { background: #d4edda; color: #155724; }
-    .status-badge.published { background: #d1ecf1; color: #0c5460; }
-    .status-badge.changes-requested { background: #fff3e0; color: #e65100; }
-    .status-badge.rejected { background: #f8d7da; color: #721c24; }
-    .status-badge.scheduled { background: #e8eaf6; color: #1a237e; }
+.content {
+  padding: var(--agt-spacing-xl) var(--agt-spacing-2xl);
+}
 
-    .form-section { margin: 16px 0; padding-top: 16px; border-top: 1px solid #eee; }
-    .form-group { margin-bottom: 16px; }
-    .form-group:last-child { margin-bottom: 0; }
-    .form-label { display: block; font-weight: 600; color: #1a1a2e; margin-bottom: 6px; font-size: 14px; }
-    .form-label .required { color: #dc3545; }
-    .form-input, .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 14px; }
-    .form-input:focus, .form-textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
-    .form-input.error { border-color: #dc3545; }
-    .form-textarea { resize: vertical; min-height: 70px; }
-    .form-hint { font-size: 12px; color: #666; margin-top: 4px; }
+.status-message {
+  font-weight: var(--agt-font-weight-semibold);
+  margin-bottom: var(--agt-spacing-xl);
+  padding: var(--agt-spacing-lg) var(--agt-spacing-xl);
+  border-radius: var(--agt-roundness-main);
+}
 
-    .actions { display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; text-decoration: none; transition: all 0.2s ease; border: none; flex: 1; }
-    .btn-primary { background-color: #3b82f6; color: #fff; }
-    .btn-primary:hover { background-color: #2563eb; }
-    .btn-primary:disabled { background-color: #ccc; cursor: not-allowed; }
-    .btn-secondary { background-color: #fff; color: #3b82f6; border: 1px solid #3b82f6; }
-    .btn-secondary:hover { background-color: #eff6ff; }
-    .btn-warning { background-color: #f59e0b; color: #fff; }
-    .btn-warning:hover { background-color: #d97706; }
+.status-message--loading {
+  color: var(--agt-text-icons-tx-base-second);
+  font-style: italic;
+  background-color: var(--agt-background-bg-base-secondary);
+}
 
-    .notice { text-align: center; padding: 20px; }
-    .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+.status-message--success {
+  color: var(--agt-text-icons-tx-success);
+  background-color: var(--agt-background-bg-success-light);
+  border: 1px solid var(--agt-utility-dark-green-300);
+}
 
-    .debug-toggle { font-size: 12px; color: #666; cursor: pointer; margin-top: 12px; text-decoration: underline; }
-    .debug-panel { margin-top: 12px; padding: 10px; background: #fff8e1; border-radius: 4px; font-size: 10px; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow-y: auto; }
+.status-message--in-review {
+  color: var(--agt-text-icons-tx-warning);
+  background-color: var(--agt-background-bg-warning-light);
+  border: 1px solid var(--agt-utility-yellow-200);
+}
 
-    .info-note { font-size: 12px; color: #666; margin-top: 12px; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+.status-message--published {
+  color: var(--agt-text-icons-tx-success);
+  background-color: var(--agt-background-bg-success-light);
+  border: 1px solid var(--agt-utility-dark-green-300);
+}
 
-    .wf-link { display: block; margin-top: 12px; text-align: center; }
-    .wf-link a { color: #3b82f6; font-weight: 600; font-size: 14px; }
+.status-message--error {
+  color: var(--agt-text-icons-tx-error);
+  background-color: var(--agt-background-bg-error-light);
+  border: 1px solid var(--agt-utility-red-300);
+}
+
+.status-message--blocked {
+  color: var(--agt-text-icons-tx-warning);
+  background-color: var(--agt-background-bg-warning-light);
+  border: 1px solid var(--agt-utility-yellow-200);
+}
+
+.status-message--approved {
+  color: var(--agt-text-icons-tx-success);
+  background-color: var(--agt-background-bg-success-light);
+  border: 1px solid var(--agt-utility-dark-green-300);
+}
+
+.status-message--scheduled {
+  color: var(--agt-text-icons-tx-brand-main);
+  background-color: var(--agt-utility-light-blue-200);
+  border: 1px solid var(--agt-utility-light-blue-300);
+}
+
+.status-message--changes-requested {
+  color: #e65100;
+  background-color: #fff3e0;
+  border: 1px solid #ffe0b2;
+}
+
+.status-message--rejected {
+  color: var(--agt-text-icons-tx-error);
+  background-color: var(--agt-background-bg-error-light);
+  border: 1px solid var(--agt-utility-red-300);
+}
+
+.page-details {
+  margin: var(--agt-spacing-xl) 0;
+}
+
+.detail-row {
+  display: flex;
+  padding: var(--agt-spacing-sm) 0;
+  border-bottom: 1px solid var(--agt-utility-grey-200);
+  font-size: var(--agt-font-size-14);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row__label {
+  font-weight: var(--agt-font-weight-semibold);
+  color: var(--agt-text-icons-tx-brand-main);
+  min-width: var(--agt-min-max-system-120px);
+  flex-shrink: 0;
+}
+
+.detail-row__value {
+  color: var(--agt-text-icons-tx-base-title);
+  overflow-wrap: break-word;
+}
+
+.detail-row__value--warning { color: var(--agt-text-icons-tx-warning); }
+.detail-row__value--success { color: var(--agt-text-icons-tx-success); }
+
+.detail-row--full-width .detail-row__value {
+  margin-top: var(--agt-spacing-2xs);
+  padding: var(--agt-spacing-sm) var(--agt-spacing-lg);
+  background-color: var(--agt-background-bg-base-primary);
+  border-radius: var(--agt-roundness-main);
+  font-style: italic;
+}
+
+.form-section {
+  margin: var(--agt-spacing-xl) 0;
+  padding-top: var(--agt-spacing-xl);
+  border-top: 1px solid var(--agt-utility-grey-200);
+}
+
+.form-group { margin-bottom: var(--agt-spacing-xl); }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
+  display: block;
+  font-weight: var(--agt-font-weight-semibold);
+  color: var(--agt-text-icons-tx-brand-main);
+  margin-bottom: var(--agt-spacing-xs);
+  font-size: var(--agt-font-size-14);
+}
+
+.form-label__required { color: var(--agt-background-bg-error-main); }
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: var(--agt-spacing-md) var(--agt-spacing-lg);
+  border: 1px solid var(--agt-utility-grey-500);
+  border-radius: var(--agt-roundness-main);
+  font-family: inherit;
+  font-size: var(--agt-font-size-14);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: var(--agt-min-max-system-80px);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--agt-background-bg-brand);
+  box-shadow: var(--agt-focused-primary);
+}
+
+.form-input--error { border-color: var(--agt-background-bg-error-main); }
+
+.form-hint {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-base-second);
+  margin-top: var(--agt-spacing-2xs);
+}
+
+.char-counter {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-placeholder);
+  text-align: left;
+  margin-top: var(--agt-spacing-2xs);
+}
+
+.actions {
+  display: flex;
+  gap: var(--agt-spacing-lg);
+  margin-top: var(--agt-spacing-2xl);
+  padding-top: var(--agt-spacing-xl);
+  border-top: 1px solid var(--agt-utility-grey-200);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--agt-spacing-md) var(--agt-spacing-2xl);
+  font-size: var(--agt-font-size-14);
+  font-weight: var(--agt-font-weight-semibold);
+  border-radius: var(--agt-roundness-main);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s, border-color 0.2s;
+  border: none;
+  flex: 1;
+}
+
+.btn--primary {
+  background-color: var(--agt-background-bg-brand);
+  color: var(--agt-background-bg-base-white);
+}
+
+.btn--primary:disabled {
+  background-color: var(--agt-background-bg-disabled);
+  cursor: not-allowed;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--agt-background-bg-brand-hover);
+}
+
+.btn--secondary {
+  background-color: var(--agt-background-bg-base-white);
+  color: var(--agt-background-bg-brand);
+  border: 1px solid var(--agt-background-bg-brand);
+}
+
+.btn--secondary:hover { background-color: var(--agt-background-bg-brand-light); }
+
+.btn--warning { background-color: #f59e0b; color: #fff; }
+.btn--warning:hover { background-color: #d97706; }
+
+.notice {
+  text-align: center;
+  padding: var(--agt-spacing-2xl);
+}
+
+.spinner {
+  width: var(--agt-spacing-5xl);
+  height: var(--agt-spacing-5xl);
+  border: var(--agt-roundness-main) solid var(--agt-utility-grey-400);
+  border-top-color: var(--agt-background-bg-brand);
+  border-radius: var(--agt-roundness-full);
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--agt-spacing-xl);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.info-note {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-base-second);
+  margin-top: var(--agt-spacing-lg);
+  text-align: center;
+  padding: var(--agt-spacing-sm);
+  background: var(--agt-background-bg-base-secondary);
+  border-radius: var(--agt-roundness-main);
+}
+
+.info-note--warning {
+  color: var(--agt-text-icons-tx-warning);
+  background: var(--agt-background-bg-warning-light);
+}
+
+.info-note--info {
+  color: var(--agt-text-icons-tx-brand-main);
+  background: var(--agt-utility-light-blue-200);
+  border: 1px solid var(--agt-utility-light-blue-300);
+  font-weight: var(--agt-font-weight-semibold);
+}
+
+.debug-toggle {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-base-second);
+  cursor: pointer;
+  margin-top: var(--agt-spacing-lg);
+  text-decoration: underline;
+}
+
+.debug-panel {
+  margin-top: var(--agt-spacing-lg);
+  padding: var(--agt-spacing-md);
+  background: var(--agt-background-bg-warning-on);
+  border-radius: var(--agt-roundness-main);
+  font-size: var(--agt-font-size-10);
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: var(--agt-min-max-system-160px);
+  overflow-y: auto;
+  display: none;
+}
+
+.debug-panel--visible { display: block; }
+
+.char-count {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-base-tertiary);
+  font-weight: normal;
+}
+
+.issue-item {
+  display: inline-block;
+  background-color: var(--agt-background-bg-warning-light);
+  color: var(--agt-text-icons-tx-warning);
+  padding: var(--agt-corner-small) var(--agt-spacing-sm);
+  border-radius: var(--agt-corner-small);
+  font-size: var(--agt-font-size-12);
+  margin: var(--agt-corner-small) var(--agt-spacing-2xs) var(--agt-corner-small) 0;
+}
+
+.feedback-box {
+  margin: var(--agt-spacing-xl) 0;
+  padding: var(--agt-spacing-lg) var(--agt-spacing-xl);
+  border-radius: var(--agt-roundness-main);
+  border-left: 4px solid #e65100;
+  background: #fff8f0;
+}
+
+.feedback-box--rejected {
+  border-left-color: var(--agt-background-bg-error-main);
+  background: var(--agt-background-bg-error-light);
+}
+
+.feedback-box__header {
+  font-weight: var(--agt-font-weight-bold);
+  font-size: var(--agt-font-size-12);
+  color: #e65100;
+  margin-bottom: var(--agt-spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feedback-box--rejected .feedback-box__header { color: var(--agt-text-icons-tx-error); }
+
+.feedback-box__text {
+  font-size: var(--agt-font-size-14);
+  color: var(--agt-text-icons-tx-base-title);
+  line-height: 1.6;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: var(--agt-corner-small) var(--agt-spacing-lg);
+  border-radius: var(--agt-roundness-full);
+  font-size: var(--agt-font-size-12);
+  font-weight: var(--agt-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-badge--in-review { background-color: var(--agt-background-bg-warning-light); color: var(--agt-text-icons-tx-warning); }
+.status-badge--approved { background-color: var(--agt-background-bg-success-light); color: var(--agt-text-icons-tx-success); }
+.status-badge--published { background-color: var(--agt-utility-light-blue-200); color: var(--agt-text-icons-tx-brand-main); }
+.status-badge--scheduled { background-color: var(--agt-utility-light-blue-200); color: var(--agt-text-icons-tx-brand-main); }
+.status-badge--changes-requested { background-color: #fff3e0; color: #e65100; }
+.status-badge--rejected { background-color: var(--agt-background-bg-error-light); color: var(--agt-text-icons-tx-error); }
+
+.rejection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--agt-spacing-2xs);
+  padding: var(--agt-corner-small) var(--agt-spacing-sm);
+  border-radius: var(--agt-roundness-full);
+  font-size: var(--agt-font-size-12);
+  font-weight: var(--agt-font-weight-semibold);
+  background: var(--agt-background-bg-error-light);
+  color: var(--agt-text-icons-tx-error);
+  margin-left: var(--agt-spacing-sm);
+}
+
+.priority-urgent { color: var(--agt-text-icons-tx-error); font-weight: var(--agt-font-weight-semibold); }
+.priority-standard { color: var(--agt-background-bg-brand); font-weight: var(--agt-font-weight-semibold); }
+.priority-future-deployment { color: var(--agt-utility-dark-blue-800); font-weight: var(--agt-font-weight-semibold); }
   </style>
 </head>
 <body>
-  <div id="details"></div>
+  <div id="app"></div>
   <script type="module">
-    // ============================================
-    // CONFIGURATION
-    // ============================================
-    const CONFIG = {
-      submitProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/send-for-review-proxy',
-      statusProxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/status-check-proxy',
-      defaultRef: 'main',
-      emailStorageKey: 'cfr_user_email',
-    };
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-plusplus */
 
-    // Statuses where "Send for Review" should be BLOCKED
-    const BLOCKED_STATUSES = ['in-review', 'approved', 'published', 'scheduled'];
-    // Statuses where re-submission is allowed (with feedback shown)
-    const RESUBMIT_STATUSES = ['changes-requested'];
+const CONFIG = Object.freeze({
+  proxyUrl: 'https://23750-539copperbadger.adobeioruntime.net/api/v1/web/default/send-for-review-proxy',
+  emailStorageKey: 'sfr_user_email',
+  defaultRef: 'main',
+  logoPath: './assets/agilent-logo.png',
+  pluginTitle: 'ContentFlow — Send For Review',
+  seo: {
+    titleMaxLength: 60,
+    descriptionMaxLength: 200,
+  },
+});
 
-    let debugLogs = [], currentContext = null, currentAnalysis = null, currentStatusData = null;
+const STATUS = Object.freeze({
+  LOADING: 'loading',
+  READY: 'ready',
+  READY_MINIMAL: 'ready-minimal',
+  IN_REVIEW: 'in-review',
+  COMPLETE: 'complete',
+  SUCCESS: 'success',
+  ERROR: 'error',
+  NONE: 'none',
+  BLOCKED: 'blocked',
+  CHANGES_REQUESTED: 'changes-requested',
+  REJECTED: 'rejected',
+});
 
-    function log(msg, data = null) {
-      const ts = new Date().toISOString().slice(11, 19);
-      console.log(`[SFR ${ts}]`, msg, data || '');
-      debugLogs.push(data ? `[${ts}] ${msg}: ${JSON.stringify(data).slice(0, 200)}` : `[${ts}] ${msg}`);
-    }
+const BLOCKED_STATUSES = ['in-review', 'approved', 'published', 'scheduled'];
+const RESUBMIT_STATUSES = ['changes-requested'];
 
-    // ============================================
-    // HELPERS
-    // ============================================
-    function getStoredEmail() { try { return localStorage.getItem(CONFIG.emailStorageKey) || ''; } catch { return ''; } }
-    function saveEmail(email) { try { localStorage.setItem(CONFIG.emailStorageKey, email); } catch {} }
+const PRIORITIES = Object.freeze({
+  STANDARD: 'Standard',
+  URGENT: 'Urgent',
+  FUTURE_DEPLOYMENT: 'Future Deployment',
+});
 
-    function normalizeStatus(raw) {
-      const s = (raw || '').toLowerCase().trim().replace(/[\s_]+/g, '-');
-      if (s.includes('not-relevant') || s === 'rejected') return 'rejected';
-      if (s.includes('changes') || s === 'changes-requested' || s === 'changes-required') return 'changes-requested';
-      if (s.includes('approved')) return 'approved';
-      if (s.includes('in-review') || s === 'in-review') return 'in-review';
-      if (s.includes('published')) return 'published';
-      if (s.includes('scheduled')) return 'scheduled';
-      if (s.includes('authoring') || s === 'draft') return 'authoring';
-      return s || 'none';
-    }
+const DEFAULT_PRIORITY = PRIORITIES.STANDARD;
 
-    function getStatusLabel(status) {
-      const map = {
-        'authoring': 'Authoring', 'in-review': 'In Review', 'approved': 'Approved',
-        'changes-requested': 'Changes Requested', 'rejected': 'Not Relevant',
-        'published': 'Published', 'scheduled': 'Scheduled',
-      };
-      return map[status] || status || 'Unknown';
-    }
+const state = {
+  context: null,
+  analysis: null,
+  debugLogs: [],
+  daSDKInstance: null,
+};
 
-    function formatDate(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+function log(message, data = null) {
+  const timestamp = new Date().toISOString().slice(11, 19);
+  const logEntry = data
+    ? `[${timestamp}] ${message}: ${JSON.stringify(data).slice(0, 200)}`
+    : `[${timestamp}] ${message}`;
+  console.log(`[SFR ${timestamp}]`, message, data || '');
+  state.debugLogs.push(logEntry);
+}
 
-    function cleanFeedback(text) {
-      if (!text) return '';
-      return text.replace(/^Proof Comment:\s*/i, '').trim();
-    }
+function formatDate(isoString) {
+  try { return new Date(isoString).toLocaleString(); } catch { return isoString; }
+}
 
-    // ============================================
-    // STATUS CHECK
-    // ============================================
-    async function checkReviewStatus(ctx) {
-      log('Checking review status via proxy...');
+function isValidEmail(email) {
+  return Boolean(email && email.includes('@') && email.includes('.'));
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function normalizePath(path) {
+  return path.replace(/^\/+/, '').replace(/\.html?$/, '').replace(/\/index$/, '') || 'index';
+}
+
+function isIndexPage(path) {
+  const normalized = normalizePath(path);
+  return normalized === 'index' || normalized === '';
+}
+
+function buildUrlPath(path) {
+  return isIndexPage(path) ? '/' : `/${normalizePath(path)}`;
+}
+
+function normalizeStatus(raw) {
+  if (!raw || typeof raw !== 'string') return 'none';
+  const s = raw.toLowerCase().trim().replace(/[\s_]+/g, '-');
+  if (s === 'rejected' || s === 'not-relevant') return 'rejected';
+  if (s.includes('changes')) return 'changes-requested';
+  if (s === 'approved') return 'approved';
+  if (s === 'in-review') return 'in-review';
+  if (s === 'published') return 'published';
+  if (s === 'scheduled') return 'scheduled';
+  if (s === 'complete') return 'complete';
+  if (s === 'authoring' || s === 'draft') return 'authoring';
+  if (s && s !== 'none') console.warn('[SFR] Unexpected status value:', raw, '→', s);
+  return 'none';
+}
+
+function getStatusLabel(status) {
+  const map = {
+    authoring: 'Authoring', 'in-review': 'In Review', approved: 'Approved',
+    'changes-requested': 'Changes Requested', rejected: 'Not Relevant',
+    published: 'Published', scheduled: 'Scheduled', complete: 'Complete',
+  };
+  return map[status] || status || 'Unknown';
+}
+
+function cleanFeedback(text) {
+  if (!text) return '';
+  return text.replace(/^Proof Comment:\s*/i, '').trim();
+}
+
+const storage = {
+  getEmail() { try { return localStorage.getItem(CONFIG.emailStorageKey) || ''; } catch { return ''; } },
+  saveEmail(email) { try { localStorage.setItem(CONFIG.emailStorageKey, email); } catch {} },
+};
+
+async function checkReviewStatus(ctx) {
+  log('Checking review status via proxy');
+  try {
+    const response = await fetch(CONFIG.proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: { action: 'check-status', pageIdentifier: ctx.pageIdentifier, org: ctx.org, site: ctx.site, ref: ctx.ref, path: ctx.path } }),
+    });
+    if (!response.ok) { log('Status check failed', { status: response.status }); return null; }
+    const data = await response.json();
+    log('Status response', data);
+    if (data.message && typeof data.message === 'string') {
       try {
-        const response = await fetch(CONFIG.statusProxyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'check-status',
-            pageIdentifier: ctx.pageIdentifier,
-            slug: ctx.slug,
-            org: ctx.org,
-            site: ctx.site,
-            ref: ctx.ref,
-            path: ctx.path,
-          }),
-        });
-        if (!response.ok) { log('Status check failed', response.status); return null; }
-        const data = await response.json();
-        log('Status response', data);
+        const fixedMessage = data.message.replace(/"status":\s*([a-zA-Z-]+),/g, '"status": "$1",');
+        const parsedMessage = JSON.parse(fixedMessage);
+        log('Parsed message from response', parsedMessage);
+        return parsedMessage;
+      } catch (parseError) {
+        log('Failed to parse message field', parseError.message);
         return data;
-      } catch (err) {
-        log('Status check error', err.message);
-        return null;
       }
     }
+    return data;
+  } catch (error) {
+    log('Status check error', error.message);
+    return null;
+  }
+}
 
-    // ============================================
-    // CONTEXT DETECTION
-    // ============================================
-    function getContextFromURLParams() {
-      const p = new URLSearchParams(window.location.search);
-      return { ref: p.get('ref') || '', site: p.get('site') || p.get('repo') || '', org: p.get('org') || p.get('owner') || '', path: p.get('path') || '' };
+async function submitReview(payload) {
+  log('Submitting review via proxy', { pageIdentifier: payload.pageIdentifier });
+  const response = await fetch(CONFIG.proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: payload }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP ${response.status}: ${errorText}`);
+  }
+  const result = await response.json();
+  if (!result.success) throw new Error(result.error || 'Submission failed');
+  return true;
+}
+
+function getContextFromURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const ctx = {
+    ref: params.get('ref') || '',
+    site: params.get('site') || params.get('repo') || '',
+    org: params.get('org') || params.get('owner') || '',
+    path: params.get('path') || '',
+  };
+  log('URL params context', ctx);
+  return ctx;
+}
+
+function getContextFromReferrer() {
+  if (!document.referrer) return null;
+  try {
+    const url = new URL(document.referrer);
+    log('Referrer URL', document.referrer);
+    const daMatch = url.href.match(/da\.live\/edit#\/([^/]+)\/([^/]+)\/(.*)?/);
+    if (daMatch) {
+      const pagePath = daMatch[3] || 'index';
+      return { org: daMatch[1], site: daMatch[2], path: pagePath, ref: 'main', source: 'da.live-referrer' };
     }
-
-    function getContextFromReferrer() {
-      if (!document.referrer) return null;
-      try {
-        const url = new URL(document.referrer);
-        const daMatch = url.href.match(/da\.live\/edit#\/([^\/]+)\/([^\/]+)\/?(.*)?/);
-        if (daMatch) return { org: daMatch[1], site: daMatch[2], path: daMatch[3] || 'index', ref: 'main', source: 'da.live-referrer' };
-        const aemMatch = url.host.match(/^([^-]+)--([^-]+)--([^.]+)\.aem\.(page|live)$/);
-        if (aemMatch) return { ref: aemMatch[1], site: aemMatch[2], org: aemMatch[3], path: url.pathname.replace(/^\//, '') || 'index', source: 'aem-referrer' };
-      } catch {}
-      return null;
+    const aemMatch = url.host.match(/^([^-]+)--([^-]+)--([^.]+)\.aem\.(page|live)$/);
+    if (aemMatch) {
+      const pagePath = url.pathname.replace(/^\//, '') || 'index';
+      return { ref: aemMatch[1], site: aemMatch[2], org: aemMatch[3], path: pagePath, source: 'aem-referrer' };
     }
+  } catch (error) { log('Referrer parse error', error.message); }
+  return null;
+}
 
-    async function getContextFromDASDK() {
-      try {
-        const DA_SDK = await import('https://da.live/nx/utils/sdk.js');
-        const sdk = await DA_SDK.default;
-        if (sdk?.context) return {
-          org: sdk.context.org || sdk.context.owner || '',
-          site: sdk.context.repo || '',
-          ref: sdk.context.ref || 'main',
-          path: sdk.context.path || 'index',
-          email: sdk.context.email || sdk.context.user?.email || '',
-          source: 'da-sdk'
-        };
-      } catch {}
-      return null;
+async function getContextFromDASDK() {
+  try {
+    const DA_SDK = await import('https://da.live/nx/utils/sdk.js');
+    const sdk = await DA_SDK.default;
+    state.daSDKInstance = sdk;
+    log('DA SDK raw context', sdk?.context);
+    if (sdk?.context) {
+      const sdkPath = sdk.context.path || '';
+      return { org: sdk.context.org || sdk.context.owner || '', site: sdk.context.repo || '', ref: sdk.context.ref || 'main', path: sdkPath, email: sdk.context.email || sdk.context.user?.email || '', source: 'da-sdk' };
     }
+  } catch (error) { log('DA SDK error', error.message); }
+  return null;
+}
 
-    async function getFullContext() {
-      const urlParams = getContextFromURLParams();
-      const referrerCtx = getContextFromReferrer();
-      const sdkCtx = await getContextFromDASDK();
+function detectPluginOrigin() {
+  const pluginHost = window.location.host;
+  const aemMatch = pluginHost.match(/^(.+)\.aem\.(page|live)$/);
+  if (aemMatch) {
+    const parts = aemMatch[1].split('--');
+    if (parts.length >= 3) return { pluginRef: parts[0], pluginSite: parts[1], pluginOrg: parts.slice(2).join('--') };
+  }
+  return null;
+}
 
-      const ctx = {
-        ref: sdkCtx?.ref || referrerCtx?.ref || urlParams.ref || CONFIG.defaultRef,
-        site: sdkCtx?.site || referrerCtx?.site || urlParams.site || '',
-        org: sdkCtx?.org || referrerCtx?.org || urlParams.org || '',
-        path: sdkCtx?.path || referrerCtx?.path || urlParams.path || 'index',
-        email: sdkCtx?.email || '',
-        source: sdkCtx?.source || referrerCtx?.source || 'url-params',
-      };
+async function getFullContext() {
+  const urlParams = getContextFromURLParams();
+  const referrerCtx = getContextFromReferrer();
+  const sdkCtx = await getContextFromDASDK();
+  const pluginOrigin = detectPluginOrigin();
+  log('Context sources', { urlParams, referrerCtx, sdkCtx, pluginOrigin });
 
-      if (ctx.path.includes('tools/send-for-review') || ctx.path.includes('send-for-review')) ctx.path = 'index';
-      ctx.path = ctx.path.replace(/^\/+/, '').replace(/\.html?$/, '') || 'index';
+  let path = sdkCtx?.path || referrerCtx?.path || urlParams.path || '';
+  if (!path) path = 'index';
+  if (path.includes('tools/send-for-review') || path.includes('send-for-review')) {
+    log('Path contains plugin path, falling back', { originalPath: path });
+    path = referrerCtx?.path || urlParams.path || 'index';
+  }
+  path = normalizePath(path);
+  log('Final path after normalization', path);
 
-      ctx.host = `${ctx.ref}--${ctx.site}--${ctx.org}.aem.page`;
-      ctx.previewUrl = `https://${ctx.host}/${ctx.path}`;
-      ctx.liveUrl = `https://${ctx.ref}--${ctx.site}--${ctx.org}.aem.live/${ctx.path}`;
-      ctx.plainUrl = `https://${ctx.host}/${ctx.path}.plain.html`;
-      ctx.daSourceUrl = `https://admin.da.live/source/${ctx.org}/${ctx.site}/${ctx.path}.html`;
-      ctx.daEditUrl = `https://da.live/edit#/${ctx.org}/${ctx.site}/${ctx.path}`;
-      ctx.env = 'page';
-      ctx.pageIdentifier = `${ctx.org}/${ctx.site}/${ctx.path}`;
+  const ctx = {
+    ref: sdkCtx?.ref || referrerCtx?.ref || urlParams.ref || CONFIG.defaultRef,
+    site: sdkCtx?.site || referrerCtx?.site || urlParams.site || '',
+    org: sdkCtx?.org || referrerCtx?.org || urlParams.org || '',
+    path,
+    email: sdkCtx?.email || '',
+    source: sdkCtx?.source || referrerCtx?.source || 'url-params',
+    ...pluginOrigin,
+  };
 
-      const pathParts = ctx.path.split('/');
-      ctx.slug = pathParts[pathParts.length - 1] || '';
+  ctx.host = `${ctx.ref}--${ctx.site}--${ctx.org}.aem.page`;
+  const urlPath = buildUrlPath(ctx.path);
+  ctx.previewUrl = `https://${ctx.host}${urlPath}`;
+  ctx.liveUrl = `https://${ctx.ref}--${ctx.site}--${ctx.org}.aem.live${urlPath}`;
+  ctx.plainUrl = `https://${ctx.host}/${ctx.path}.plain.html`;
 
-      log('Final context', ctx);
-      return ctx;
+  if (ctx.pluginRef && ctx.pluginSite === ctx.site && ctx.pluginOrg === ctx.org) {
+    ctx.sameOriginHost = `${ctx.pluginRef}--${ctx.site}--${ctx.org}.aem.page`;
+    ctx.sameOriginPreviewUrl = `https://${ctx.sameOriginHost}${urlPath}`;
+    ctx.sameOriginPlainUrl = `https://${ctx.sameOriginHost}/${ctx.path}.plain.html`;
+  }
+
+  ctx.daContentUrl = `https://content.da.live/${ctx.org}/${ctx.site}/${ctx.path}`;
+  ctx.daSourceUrl = `https://admin.da.live/source/${ctx.org}/${ctx.site}/${ctx.path}.html`;
+  ctx.env = 'page';
+  ctx.pageIdentifier = `${ctx.org}/${ctx.site}/${ctx.path}`;
+  log('Final context', ctx);
+  return ctx;
+}
+
+async function fetchFromSDK() {
+  if (!state.daSDKInstance?.context) return null;
+  try {
+    log('Trying DA SDK content');
+    const doc = state.daSDKInstance.context.doc || state.daSDKInstance.context.document;
+    if (doc) {
+      const html = typeof doc === 'string' ? doc : doc.outerHTML || doc.innerHTML;
+      if (html) { log('DA SDK content found'); return { html, source: 'da-sdk', isPlain: true }; }
     }
+  } catch (error) { log('DA SDK content error', error.message); }
+  return null;
+}
 
-    // ============================================
-    // CONTENT FETCHING & ANALYSIS
-    // ============================================
-    async function fetchContent(ctx) {
-      const strategies = [
-        { url: ctx.previewUrl, source: 'full-page', isPlain: false },
-        { url: ctx.plainUrl, source: 'plain.html', isPlain: true },
-        { url: ctx.daSourceUrl, source: 'da-source', isPlain: true },
-      ];
-      for (const s of strategies) {
-        try {
-          const res = await fetch(s.url, { cache: 'no-store' });
-          if (res.ok) return { html: await res.text(), source: s.source, isPlain: s.isPlain };
-        } catch {}
-      }
-      return null;
+async function fetchFromUrl(url, source, options = {}) {
+  try {
+    log(`Trying ${source}`, url);
+    const fetchOptions = { cache: 'no-store', ...(options.credentials && { credentials: options.credentials }) };
+    const response = await fetch(url, fetchOptions);
+    if (response.ok) {
+      const html = await response.text();
+      log(`${source} success`, { length: html.length });
+      return { html, source, isPlain: options.isPlain ?? true };
     }
+    log(`${source} returned`, response.status);
+  } catch (error) { log(`${source} error`, error.message); }
+  return null;
+}
 
-    function analyzeDocument(doc, isPlain) {
-      const root = isPlain ? doc.body : (doc.querySelector('main') || doc.body);
-      const text = root?.textContent || '';
-      const cleanText = text.replace(/\s+/g, ' ').trim();
-      const words = cleanText.split(/\s+/).filter(w => w.length > 0);
-      const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+async function fetchContent(ctx) {
+  const sdkContent = await fetchFromSDK();
+  if (sdkContent) return sdkContent;
 
-      const contentMetrics = {
-        wordCount: words.length,
-        characterCount: cleanText.length,
-        sentenceCount: sentences.length,
-        paragraphCount: root.querySelectorAll('p').length,
-        readingTimeMinutes: Math.ceil(words.length / 200) || 1,
-      };
+  const strategies = [];
+  if (ctx.sameOriginPreviewUrl) strategies.push({ url: ctx.sameOriginPreviewUrl, source: 'same-origin-full', isPlain: false });
+  strategies.push({ url: ctx.previewUrl, source: 'full-page', isPlain: false });
+  if (ctx.sameOriginPlainUrl) strategies.push({ url: ctx.sameOriginPlainUrl, source: 'same-origin-plain', isPlain: true });
+  strategies.push(
+    { url: ctx.daContentUrl, source: 'content.da.live', isPlain: true },
+    { url: ctx.daSourceUrl, source: 'admin.da.live', isPlain: true, credentials: 'include' },
+    { url: ctx.plainUrl, source: 'plain.html', isPlain: true },
+  );
 
-      const headings = [], counts = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 }, headingIssues = [];
-      root.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => {
-        const level = parseInt(h.tagName.charAt(1), 10);
-        counts[h.tagName.toLowerCase()]++;
-        headings.push({ level, tag: h.tagName.toLowerCase(), text: h.textContent?.trim() || '' });
-      });
-      if (counts.h1 === 0) headingIssues.push('Missing H1 heading');
-      else if (counts.h1 > 1) headingIssues.push(`Multiple H1 headings (${counts.h1})`);
+  log('Fetch strategies', strategies.map((s) => s.source));
+  for (const strategy of strategies) {
+    const content = await fetchFromUrl(strategy.url, strategy.source, strategy);
+    if (content) { log('Content fetched successfully', { source: content.source }); return content; }
+  }
+  log('All fetch strategies failed');
+  return null;
+}
 
-      const sections = root.querySelectorAll(':scope > div'), blocks = [], blockSummary = {};
-      sections.forEach((section, i) => {
-        section.querySelectorAll(':scope > div[class]').forEach(block => {
-          const name = block.classList[0] || 'unknown';
-          blocks.push({ name, section: i + 1 });
-          blockSummary[name] = (blockSummary[name] || 0) + 1;
-        });
-      });
+function analyzeContentMetrics(root) {
+  const text = root?.textContent || '';
+  const cleanText = text.replace(/\s+/g, ' ').trim();
+  const words = cleanText.split(/\s+/).filter((w) => w.length > 0);
+  const sentences = cleanText.split(/[.!?]+/).filter((s) => s.trim().length > 0);
+  return {
+    wordCount: words.length, characterCount: cleanText.length,
+    characterCountNoSpaces: cleanText.replace(/\s/g, '').length,
+    sentenceCount: sentences.length, paragraphCount: root.querySelectorAll('p').length,
+    avgWordsPerSentence: sentences.length > 0 ? Math.round(words.length / sentences.length) : 0,
+    readingTimeMinutes: Math.ceil(words.length / 200) || 1,
+  };
+}
 
-      const title = doc.querySelector('title')?.textContent?.trim() || '';
-      const description = doc.querySelector('meta[name="description"]')?.content?.trim() || '';
-      const seoIssues = [];
-      if (!title) seoIssues.push('Missing page title');
-      if (!description) seoIssues.push('Missing meta description');
+function analyzeHeadings(root) {
+  const headings = [];
+  const counts = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
+  const issues = [];
+  root.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
+    const level = parseInt(h.tagName.charAt(1), 10);
+    const tag = h.tagName.toLowerCase();
+    counts[tag]++;
+    headings.push({ level, tag, text: h.textContent?.trim() || '', id: h.id || '' });
+  });
+  if (counts.h1 === 0) issues.push('Required: Add an attribute to the Total Headings field');
+  else if (counts.h1 > 1) issues.push(`Multiple H1 headings found (${counts.h1})`);
+  let lastLevel = 0;
+  headings.forEach((h) => {
+    if (h.level > lastLevel + 1 && lastLevel > 0) issues.push(`Skipped heading level: H${lastLevel} to H${h.level}`);
+    lastLevel = h.level;
+  });
+  return { headings, counts, total: headings.length, issues, isValid: issues.length === 0 };
+}
 
-      const images = root.querySelectorAll('img');
-      let withAlt = 0, withoutAlt = 0;
-      images.forEach(img => { if (img.getAttribute('alt')) withAlt++; else withoutAlt++; });
+function analyzeBlocks(root) {
+  const sections = root.querySelectorAll(':scope > div');
+  const blocks = [];
+  const blockSummary = {};
+  sections.forEach((section, index) => {
+    section.querySelectorAll(':scope > div[class]').forEach((block) => {
+      const name = block.classList[0] || 'unknown';
+      const textContent = block.textContent?.trim() || '';
+      blocks.push({ name, section: index + 1, variants: Array.from(block.classList).slice(1), contentPreview: textContent.length > 100 ? `${textContent.substring(0, 100)}...` : textContent });
+      blockSummary[name] = (blockSummary[name] || 0) + 1;
+    });
+  });
+  return { totalBlocks: blocks.length, totalSections: sections.length, blocks, blockNames: [...new Set(blocks.map((b) => b.name))], blockSummary };
+}
 
-      return {
-        contentMetrics,
-        headingStructure: { headings, counts, issues: headingIssues },
-        blocks: { totalBlocks: blocks.length, totalSections: sections.length, blocks, blockNames: [...new Set(blocks.map(b => b.name))], blockSummary },
-        seo: { title: { content: title, length: title.length }, metaDescription: { content: description, length: description.length }, issues: seoIssues },
-        accessibility: { images: { total: images.length, withAlt, withoutAlt } },
-      };
+function analyzeSEO(doc) {
+  const title = doc.querySelector('title')?.textContent?.trim() || '';
+  const description = doc.querySelector('meta[name="description"]')?.content?.trim() || '';
+  const canonical = doc.querySelector('link[rel="canonical"]')?.href || '';
+  const robots = doc.querySelector('meta[name="robots"]')?.content || '';
+  const lang = doc.documentElement?.lang || doc.querySelector('html')?.lang || '';
+  const issues = [];
+  if (!title) issues.push('Missing title');
+  else if (title.length > CONFIG.seo.titleMaxLength) issues.push(`Title exceeds recommended length (${title.length} chars, maximum of ${CONFIG.seo.titleMaxLength} characters)`);
+  if (!description) issues.push('Missing description');
+  else if (description.length > CONFIG.seo.descriptionMaxLength) issues.push(`Meta description is recommended to be under ${CONFIG.seo.descriptionMaxLength} characters for optimal display (currently ${description.length} chars)`);
+  if (!canonical) issues.push('Missing canonical URL');
+  if (!lang) issues.push('Required: Add an attribute to the Language field');
+  return { title: { content: title, length: title.length }, metaDescription: { content: description, length: description.length }, canonical, robots, lang, issues };
+}
+
+function analyzeOpenGraph(doc) {
+  const og = {}, twitter = {}, issues = [];
+  doc.querySelectorAll('meta[property^="og:"]').forEach((meta) => { og[meta.getAttribute('property').replace('og:', '')] = meta.content; });
+  doc.querySelectorAll('meta[name^="twitter:"]').forEach((meta) => { twitter[meta.getAttribute('name').replace('twitter:', '')] = meta.content; });
+  if (!og.title) issues.push('Missing og:title');
+  if (!og.description) issues.push('Missing og:description');
+  else if (og.description.length > 200) issues.push(`Open Graph description is recommended to be under 200 characters (currently ${og.description.length} chars)`);
+  if (!og.image) issues.push('Missing og:image');
+  const hasSocialMeta = Object.keys(og).length > 0 || Object.keys(twitter).length > 0;
+  return { openGraph: og, twitter, issues, score: !hasSocialMeta ? 0 : (issues.length === 0 ? 100 : 50), hasSocialMeta };
+}
+
+function analyzeAccessibility(root) {
+  const images = root.querySelectorAll('img');
+  let withAlt = 0, withoutAlt = 0, decorative = 0;
+  images.forEach((img) => {
+    const alt = img.getAttribute('alt');
+    if (alt === '') decorative++;
+    else if (alt) withAlt++;
+    else withoutAlt++;
+  });
+  const total = images.length;
+  const altCoveragePercent = total > 0 ? Math.round(((withAlt + decorative) / total) * 100) : 100;
+  const issues = [];
+  if (withoutAlt > 0) issues.push(`${withoutAlt} images missing alt text. The Alt text field is required.`);
+  return { images: { total, withAlt, withoutAlt, decorative, altCoveragePercent }, aria: { labels: root.querySelectorAll('[aria-label]').length, roles: root.querySelectorAll('[role]').length }, issues, score: altCoveragePercent };
+}
+
+function analyzeLinks(root) {
+  const links = root.querySelectorAll('a[href]');
+  let internal = 0, external = 0, mailto = 0, tel = 0;
+  const externalLinks = [];
+  links.forEach((link) => {
+    const href = link.getAttribute('href');
+    if (!href) return;
+    if (href.startsWith('mailto:')) mailto++;
+    else if (href.startsWith('tel:')) tel++;
+    else if (href.startsWith('http') && !href.includes(window.location.host)) { external++; externalLinks.push({ href, text: link.textContent?.trim() || '' }); }
+    else internal++;
+  });
+  return { total: links.length, internal, external, buttons: root.querySelectorAll('button, a.button, .button').length, mailto, tel, externalLinks };
+}
+
+function getAnalytics() {
+  return { timestamp: new Date().toISOString(), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, userAgent: navigator.userAgent, language: navigator.language, screen: { width: window.screen?.width || 0, height: window.screen?.height || 0, colorDepth: window.screen?.colorDepth || 0 }, viewport: { width: window.innerWidth, height: window.innerHeight } };
+}
+
+function analyzeDocument(doc, isPlain) {
+  const root = isPlain ? doc.body : (doc.querySelector('main') || doc.body);
+  return { contentMetrics: analyzeContentMetrics(root), headingStructure: analyzeHeadings(root), blocks: analyzeBlocks(root), seo: analyzeSEO(doc), openGraph: analyzeOpenGraph(doc), accessibility: analyzeAccessibility(root), links: analyzeLinks(root), analytics: getAnalytics() };
+}
+
+function createMinimalAnalysis() {
+  return {
+    contentMetrics: { wordCount: 0, characterCount: 0, characterCountNoSpaces: 0, sentenceCount: 0, paragraphCount: 0, avgWordsPerSentence: 0, readingTimeMinutes: 0 },
+    headingStructure: { headings: [], counts: { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 }, total: 0, issues: ['Content not available for analysis'], isValid: false },
+    blocks: { totalBlocks: 0, totalSections: 0, blocks: [], blockNames: [], blockSummary: {} },
+    seo: { title: { content: '', length: 0 }, metaDescription: { content: '', length: 0 }, canonical: '', robots: '', lang: '', issues: ['Content not available for analysis'] },
+    openGraph: { openGraph: {}, twitter: {}, issues: [], score: 0, hasSocialMeta: false },
+    accessibility: { images: { total: 0, withAlt: 0, withoutAlt: 0, decorative: 0, altCoveragePercent: 100 }, aria: { labels: 0, roles: 0 }, issues: [], score: 100 },
+    links: { total: 0, internal: 0, external: 0, buttons: 0, mailto: 0, tel: 0, externalLinks: [] },
+    analytics: getAnalytics(),
+  };
+}
+
+function buildPayload(ctx, analysis, email, notes = '', priority = DEFAULT_PRIORITY) {
+  const name = ctx.path.split('/').pop() || 'index';
+  let title = analysis.seo?.title?.content || name;
+  if (!title || title === name) {
+    const h1 = analysis.headingStructure?.headings?.find((h) => h.level === 1);
+    if (h1) title = h1.text;
+  }
+  const urlPath = buildUrlPath(ctx.path);
+  return { title, name, path: urlPath, url: ctx.liveUrl, previewUrl: ctx.previewUrl, liveUrl: ctx.liveUrl, reviewSubmissionDate: new Date().toISOString(), submittedBy: email || 'unknown', notes: notes || '', priority: priority || DEFAULT_PRIORITY, host: ctx.host, env: ctx.env, org: ctx.org, site: ctx.site, ref: ctx.ref, source: 'DA.live Library', pageIdentifier: ctx.pageIdentifier, contentMetrics: analysis.contentMetrics, headingStructure: analysis.headingStructure, blocks: analysis.blocks, seo: analysis.seo, openGraph: analysis.openGraph, accessibility: analysis.accessibility, links: analysis.links, analytics: analysis.analytics };
+}
+
+function getPriorityClass(priority) {
+  if (!priority) return '';
+  return `priority-${priority.toLowerCase().replace(/\s+/g, '-')}`;
+}
+
+function renderPriorityOptions(selectedPriority = null) {
+  return Object.values(PRIORITIES).map((priority) => {
+    const selected = selectedPriority === priority ? 'selected' : '';
+    return `<option value="${escapeHtml(priority)}" ${selected}>${escapeHtml(priority)}</option>`;
+  }).join('');
+}
+
+function renderHeader() {
+  const logoHtml = CONFIG.logoPath
+    ? `<img src="${CONFIG.logoPath}" alt="Agilent Logo" class="logo" onerror="this.style.display='none'" />`
+    : '';
+  return `<div class="header-bar">${logoHtml}<span class="header-title">${CONFIG.pluginTitle}</span></div>`;
+}
+
+function renderLoading(message) {
+  return `<div class="notice"><div class="spinner"></div><p class="status-message status-message--loading">${escapeHtml(message)}</p></div>`;
+}
+
+function renderError(message) {
+  return `<div class="notice"><p class="status-message status-message--error">${escapeHtml(message)}</p><button id="retry-btn" class="btn btn--primary" style="margin-top:12px;">Retry</button><div class="debug-toggle" id="debug-toggle">Show debug info</div><div class="debug-panel" id="debug-panel"></div></div>`;
+}
+
+function renderInReview(data) {
+  const ctx = state.context;
+  const reviewerName = data.reviewerName || 'Reviewer';
+  return `
+    <p class="status-message status-message--in-review">Page is in review by ${escapeHtml(reviewerName)}.</p>
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">Title:</span><span class="detail-row__value">${escapeHtml(data.title || ctx.path)}</span></div>
+      <div class="detail-row"><span class="detail-row__label">Submitted By:</span><span class="detail-row__value">${escapeHtml(data.submittedBy || 'Unknown')}</span></div>
+      <div class="detail-row"><span class="detail-row__label">Submitted On:</span><span class="detail-row__value">${data.submittedDate ? formatDate(data.submittedDate) : 'N/A'}</span></div>
+      ${data.priority ? `<div class="detail-row"><span class="detail-row__label">Priority:</span><span class="detail-row__value"><span class="${getPriorityClass(data.priority)}">${escapeHtml(data.priority)}</span></span></div>` : ''}
+      ${data.notes ? `<div class="detail-row detail-row--full-width"><span class="detail-row__label">Notes:</span><span class="detail-row__value">${escapeHtml(data.notes)}</span></div>` : ''}
+    </div>
+    <div class="actions">
+      <a href="${ctx.previewUrl}" target="_blank" class="btn btn--secondary">View Preview</a>
+      <button id="submit-btn" class="btn btn--primary" disabled title="Review already in progress">Submit for Review</button>
+    </div>
+    <p class="info-note">Complete the current review before submitting a new one.</p>`;
+}
+
+function renderComplete(viewState) {
+  const ctx = state.context;
+  const storedEmail = storage.getEmail();
+  const data = viewState.data || {};
+  const analysis = viewState.analysis || state.analysis;
+  const name = viewState.name || ctx.path.split('/').pop() || 'index';
+  const seoTitle = analysis?.seo?.title?.content || data.title || '';
+  const seoTitleLength = analysis?.seo?.title?.length || seoTitle.length || 0;
+  const seoDescription = analysis?.seo?.metaDescription?.content || '';
+  const seoDescLength = analysis?.seo?.metaDescription?.length || 0;
+  const seoIssues = analysis?.seo?.issues || [];
+  const seoIssuesHtml = seoIssues.length > 0 ? seoIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const headingIssues = analysis?.headingStructure?.issues || [];
+  const headingIssuesHtml = headingIssues.length > 0 ? headingIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const blocks = analysis?.blocks?.blockNames?.length > 0 ? analysis.blocks.blockNames.join(', ') : 'None';
+  return `
+    <p class="status-message status-message--published">Page was published by ${escapeHtml(data.submittedBy || 'Unknown')} at ${data.completedDate ? formatDate(data.completedDate) : 'N/A'}.</p>
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">SEO Title (max 60):</span><span class="detail-row__value">${escapeHtml(seoTitle || name)} <span class="char-count">(${seoTitleLength} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Name:</span><span class="detail-row__value">${escapeHtml(name)}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Description:</span><span class="detail-row__value ${seoDescLength > CONFIG.seo.descriptionMaxLength ? 'detail-row__value--warning' : ''}">${seoDescription ? escapeHtml(seoDescription) : '<em>No description</em>'} <span class="char-count">(${seoDescLength} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Blocks:</span><span class="detail-row__value">${analysis?.blocks?.totalBlocks || 0} (${escapeHtml(blocks)})</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">SEO Issues:</span><span class="detail-row__value ${seoIssues.length > 0 ? 'detail-row__value--warning' : ''}">${seoIssuesHtml}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Heading Issues:</span><span class="detail-row__value ${headingIssues.length > 0 ? 'detail-row__value--warning' : ''}">${headingIssuesHtml}</span></div>
+    </div>
+    <div class="form-section">
+      <div class="form-group"><label class="form-label">Your Email <span class="form-label__required">*</span></label><input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${escapeHtml(storedEmail)}" required><div class="form-hint">Required for review tracking</div></div>
+      <div class="form-group"><label class="form-label">Priority <span class="form-label__required">*</span></label><select id="priority-select" class="form-input" disabled>${renderPriorityOptions()}</select><div class="form-hint">Priority cannot be changed after initial submission</div></div>
+      <div class="form-group"><label class="form-label">Notes / Instructions (Optional)</label><textarea id="notes-input" class="form-textarea" placeholder="Enter any additional notes..."></textarea><div class="char-counter"><span id="notes-char-count">0</span> characters</div></div>
+    </div>
+    <div class="actions">
+      <a href="${ctx.previewUrl}" target="_blank" class="btn btn--secondary">View Preview</a>
+      <button id="submit-btn" class="btn btn--primary">Submit for Review</button>
+    </div>
+    <p class="info-note">You can submit a new review for this published page.</p>`;
+}
+
+function renderBlocked(data) {
+  const ctx = state.context;
+  const status = normalizeStatus(data.status);
+  const statusLabel = getStatusLabel(status);
+  let statusMessage = 'Review submission is not available at this time.';
+  if (status === 'in-review') statusMessage = `This page is in review by ${escapeHtml(data.reviewerName || 'Reviewer')}. Please wait for the reviewer to complete their assessment.`;
+  else if (status === 'approved') statusMessage = data.lastReviewDate ? `This page was approved on ${formatDate(data.lastReviewDate)} by ${escapeHtml(data.reviewerName || 'Reviewer')}. Open the Publish task in Workfront to publish it.` : `This page was approved by ${escapeHtml(data.reviewerName || 'Reviewer')}. Open the Publish task in Workfront to publish it.`;
+  else if (status === 'published') statusMessage = data.completedDate ? `This page was completed on ${formatDate(data.completedDate)}.` : 'This page has already been published.';
+  else if (status === 'scheduled') statusMessage = data.scheduledDate ? `This page is scheduled to be published on ${formatDate(data.scheduledDate)} by ${escapeHtml(data.reviewerName || data.submittedBy || 'System')}.` : `This page is scheduled for publishing by ${escapeHtml(data.reviewerName || data.submittedBy || 'System')}.`;
+  let messageClass = 'status-message--blocked';
+  if (status === 'approved' || status === 'published') messageClass = 'status-message--approved';
+  else if (status === 'scheduled') messageClass = 'status-message--scheduled';
+  return `
+    <p class="status-message ${messageClass}">${statusMessage}</p>
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">Page:</span><span class="detail-row__value">${escapeHtml(ctx.path)}</span></div>
+      <div class="detail-row"><span class="detail-row__label">Status:</span><span class="detail-row__value"><span class="status-badge status-badge--${status}">${escapeHtml(statusLabel)}</span></span></div>
+      ${data.title ? `<div class="detail-row"><span class="detail-row__label">Title:</span><span class="detail-row__value">${escapeHtml(data.title)}</span></div>` : ''}
+      ${data.submittedBy ? `<div class="detail-row"><span class="detail-row__label">Submitted By:</span><span class="detail-row__value">${escapeHtml(data.submittedBy)}</span></div>` : ''}
+      ${data.submittedDate ? `<div class="detail-row"><span class="detail-row__label">Submitted:</span><span class="detail-row__value">${formatDate(data.submittedDate)}</span></div>` : ''}
+      ${data.priority ? `<div class="detail-row"><span class="detail-row__label">Priority:</span><span class="detail-row__value"><span class="${getPriorityClass(data.priority)}">${escapeHtml(data.priority)}</span></span></div>` : ''}
+    </div>
+    <div class="actions">
+      <a href="${ctx.previewUrl}" target="_blank" class="btn btn--secondary">View Preview</a>
+      <button class="btn btn--primary" disabled>Submit for Review</button>
+    </div>`;
+}
+
+function renderChangesRequested(viewState) {
+  const ctx = state.context;
+  const data = viewState.data || {};
+  const analysis = viewState.analysis || state.analysis;
+  const name = viewState.name || ctx.path.split('/').pop() || 'index';
+  const feedback = cleanFeedback(data.reviewerFeedback);
+  const rejCount = parseInt(data.rejectionCount, 10) || 0;
+  const storedEmail = data.submittedBy || storage.getEmail();
+  const seoTitle = analysis?.seo?.title?.content || data.title || '';
+  const seoTitleLength = analysis?.seo?.title?.length || seoTitle.length || 0;
+  const seoDescription = analysis?.seo?.metaDescription?.content || '';
+  const seoDescLength = analysis?.seo?.metaDescription?.length || 0;
+  const seoIssues = analysis?.seo?.issues || [];
+  const seoIssuesHtml = seoIssues.length > 0 ? seoIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const headingIssues = analysis?.headingStructure?.issues || [];
+  const headingIssuesHtml = headingIssues.length > 0 ? headingIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const blocks = analysis?.blocks?.blockNames?.length > 0 ? analysis.blocks.blockNames.join(', ') : 'None';
+  const rejBadgeHtml = rejCount > 0 ? `<span class="rejection-badge">\u21BB ${rejCount} revision${rejCount > 1 ? 's' : ''}</span>` : '';
+  const reviewerName = data.reviewerName || 'Reviewer';
+  return `
+    <p class="status-message status-message--changes-requested">Changes were requested by ${escapeHtml(reviewerName)}. Review the feedback below, make edits, then resubmit.</p>
+    ${feedback ? `<div class="feedback-box"><div class="feedback-box__header">Reviewer Feedback</div><div class="feedback-box__text">${escapeHtml(feedback)}</div></div>` : ''}
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">Status:</span><span class="detail-row__value"><span class="status-badge status-badge--changes-requested">Changes Requested</span>${rejBadgeHtml}</span></div>
+      <div class="detail-row"><span class="detail-row__label">SEO Title (max 60):</span><span class="detail-row__value">${escapeHtml(seoTitle || name)} <span class="char-count">(${seoTitleLength} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Name:</span><span class="detail-row__value">${escapeHtml(name)}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Description:</span><span class="detail-row__value ${seoDescLength > CONFIG.seo.descriptionMaxLength ? 'detail-row__value--warning' : ''}">${seoDescription ? escapeHtml(seoDescription) : '<em>No description</em>'} <span class="char-count">(${seoDescLength} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Blocks:</span><span class="detail-row__value">${analysis?.blocks?.totalBlocks || 0} (${escapeHtml(blocks)})</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">SEO Issues:</span><span class="detail-row__value ${seoIssues.length > 0 ? 'detail-row__value--warning' : ''}">${seoIssuesHtml}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Heading Issues:</span><span class="detail-row__value ${headingIssues.length > 0 ? 'detail-row__value--warning' : ''}">${headingIssuesHtml}</span></div>
+      ${data.lastReviewDate ? `<div class="detail-row"><span class="detail-row__label">Last Reviewed:</span><span class="detail-row__value">${formatDate(data.lastReviewDate)}</span></div>` : ''}
+      ${data.priority ? `<div class="detail-row"><span class="detail-row__label">Priority:</span><span class="detail-row__value"><span class="${getPriorityClass(data.priority)}">${escapeHtml(data.priority)}</span></span></div>` : ''}
+    </div>
+    <div class="form-section">
+      <div class="form-group"><label class="form-label">Your Email <span class="form-label__required">*</span></label><input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${escapeHtml(storedEmail)}" required><div class="form-hint">Required for review tracking</div></div>
+      <div class="form-group"><label class="form-label">Priority <span class="form-label__required">*</span></label><select id="priority-select" class="form-input" disabled>${renderPriorityOptions(data.priority)}</select><div class="form-hint">Priority cannot be changed after initial submission</div></div>
+      <div class="form-group"><label class="form-label">Notes / What Changed</label><textarea id="notes-input" class="form-textarea" placeholder="Describe the changes you made in response to the feedback..."></textarea><div class="char-counter"><span id="notes-char-count">0</span> characters</div></div>
+    </div>
+    <div class="actions"><button id="submit-btn" class="btn btn--warning">Resubmit for Review</button></div>`;
+}
+
+function renderRejected(data) {
+  const ctx = state.context;
+  const feedback = cleanFeedback(data.reviewerFeedback);
+  return `
+    <p class="status-message status-message--rejected">This page was marked as &ldquo;Not Relevant&rdquo; and the project has been closed.</p>
+    ${feedback ? `<div class="feedback-box feedback-box--rejected"><div class="feedback-box__header">Reviewer Feedback</div><div class="feedback-box__text">${escapeHtml(feedback)}</div></div>` : ''}
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">Page:</span><span class="detail-row__value">${escapeHtml(ctx.path)}</span></div>
+      <div class="detail-row"><span class="detail-row__label">Status:</span><span class="detail-row__value"><span class="status-badge status-badge--rejected">Not Relevant</span></span></div>
+    </div>
+    <div class="actions">
+      <a href="${ctx.previewUrl}" target="_blank" class="btn btn--secondary">View Preview</a>
+      <button class="btn btn--primary" disabled>Submit for Review</button>
+    </div>
+    <p class="info-note">To resubmit, create a new project via the Product Launch form.</p>`;
+}
+
+function renderReadyForm(title, name, analysis) {
+  const storedEmail = storage.getEmail();
+  const seoTitle = analysis?.seo?.title?.content || '';
+  const seoTitleLength = analysis?.seo?.title?.length || 0;
+  const seoDescription = analysis?.seo?.metaDescription?.content || '';
+  const seoDescLength = analysis?.seo?.metaDescription?.length || 0;
+  const seoIssues = analysis?.seo?.issues || [];
+  const seoIssuesHtml = seoIssues.length > 0 ? seoIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const headingIssues = analysis?.headingStructure?.issues || [];
+  const headingIssuesHtml = headingIssues.length > 0 ? headingIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const blocks = analysis?.blocks?.blockNames?.length > 0 ? analysis.blocks.blockNames.join(', ') : 'None';
+  return `
+    <p class="status-message status-message--loading">Ready to submit for review.</p>
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">SEO Title (max 60):</span><span class="detail-row__value">${escapeHtml(seoTitle || name)} <span class="char-count">(${seoTitleLength} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Name:</span><span class="detail-row__value">${escapeHtml(name)}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Description:</span><span class="detail-row__value ${seoDescLength > CONFIG.seo.descriptionMaxLength ? 'detail-row__value--warning' : ''}">${seoDescription ? escapeHtml(seoDescription) : '<em>No description</em>'} <span class="char-count">(${seoDescLength} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Blocks:</span><span class="detail-row__value">${analysis?.blocks?.totalBlocks || 0} (${escapeHtml(blocks)})</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">SEO Issues:</span><span class="detail-row__value ${seoIssues.length > 0 ? 'detail-row__value--warning' : ''}">${seoIssuesHtml}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Heading Issues:</span><span class="detail-row__value ${headingIssues.length > 0 ? 'detail-row__value--warning' : ''}">${headingIssuesHtml}</span></div>
+    </div>
+    <div class="form-section">
+      <div class="form-group"><label class="form-label">Your Email <span class="form-label__required">*</span></label><input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${escapeHtml(storedEmail)}" required><div class="form-hint">Required for review tracking</div></div>
+      <div class="form-group"><label class="form-label">Priority <span class="form-label__required">*</span></label><select id="priority-select" class="form-input">${renderPriorityOptions()}</select><div class="form-hint">Select the priority level for this review</div></div>
+      <div class="form-group"><label class="form-label">Notes / Instructions (Optional)</label><textarea id="notes-input" class="form-textarea" placeholder="Enter any additional notes or instructions for this review..."></textarea><div class="char-counter"><span id="notes-char-count">0</span> characters</div></div>
+    </div>
+    <p class="info-note">Please preview the page before sending for review</p>
+    <div class="actions"><button id="submit-btn" class="btn btn--primary">Submit for Review</button></div>`;
+}
+
+function renderReadyMinimal(name) {
+  const ctx = state.context;
+  const storedEmail = storage.getEmail();
+  return `
+    <p class="status-message status-message--loading">Ready to submit for review.</p>
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">Page:</span><span class="detail-row__value">${escapeHtml(name)}</span></div>
+      <div class="detail-row"><span class="detail-row__label">Path:</span><span class="detail-row__value">${buildUrlPath(ctx.path)}</span></div>
+    </div>
+    <p class="info-note info-note--warning">⚠️ Page analysis unavailable (cross-origin). Review tracking will still work.</p>
+    <div class="form-section">
+      <div class="form-group"><label class="form-label">Your Email <span class="form-label__required">*</span></label><input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${escapeHtml(storedEmail)}" required><div class="form-hint">Required for review tracking</div></div>
+      <div class="form-group"><label class="form-label">Priority <span class="form-label__required">*</span></label><select id="priority-select" class="form-input">${renderPriorityOptions()}</select><div class="form-hint">Select the priority level for this review</div></div>
+      <div class="form-group"><label class="form-label">Notes / Instructions (Optional)</label><textarea id="notes-input" class="form-textarea" placeholder="Enter any additional notes..."></textarea></div>
+    </div>
+    <p class="info-note">Please preview the page before sending for review</p>
+    <div class="actions"><button id="submit-btn" class="btn btn--primary">Submit for Review</button></div>`;
+}
+
+function renderSuccess(payload) {
+  const seoIssues = payload.seo?.issues || [];
+  const seoIssuesHtml = seoIssues.length > 0 ? seoIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const headingIssues = payload.headingStructure?.issues || [];
+  const headingIssuesHtml = headingIssues.length > 0 ? headingIssues.map((i) => `<span class="issue-item">${escapeHtml(i)}</span>`).join('') : '<span class="detail-row__value--success">None</span>';
+  const blocks = payload.blocks?.blockNames?.length > 0 ? payload.blocks.blockNames.join(', ') : 'None';
+  const description = payload.seo?.metaDescription?.content || '';
+  const descLength = payload.seo?.metaDescription?.length || 0;
+  return `
+    <p class="status-message status-message--success">Review request submitted successfully!</p>
+    <div class="page-details">
+      <div class="detail-row"><span class="detail-row__label">SEO Title (max 60):</span><span class="detail-row__value">${escapeHtml(payload.title)} <span class="char-count">(${payload.seo?.title?.length || 0} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Name:</span><span class="detail-row__value">${escapeHtml(payload.name)}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Description:</span><span class="detail-row__value">${description ? escapeHtml(description) : '<em>No description</em>'} <span class="char-count">(${descLength} chars)</span></span></div>
+      <div class="detail-row"><span class="detail-row__label">Submitted By:</span><span class="detail-row__value">${escapeHtml(payload.submittedBy)}</span></div>
+      <div class="detail-row"><span class="detail-row__label">Submission Date:</span><span class="detail-row__value">${formatDate(payload.reviewSubmissionDate)}</span></div>
+      ${payload.priority ? `<div class="detail-row"><span class="detail-row__label">Priority:</span><span class="detail-row__value"><span class="${getPriorityClass(payload.priority)}">${escapeHtml(payload.priority)}</span></span></div>` : ''}
+      ${payload.notes ? `<div class="detail-row detail-row--full-width"><span class="detail-row__label">Notes:</span><span class="detail-row__value">${escapeHtml(payload.notes)}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-row__label">Blocks:</span><span class="detail-row__value">${payload.blocks?.totalBlocks || 0} (${escapeHtml(blocks)})</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">SEO Issues:</span><span class="detail-row__value ${seoIssues.length > 0 ? 'detail-row__value--warning' : ''}">${seoIssuesHtml}</span></div>
+      <div class="detail-row detail-row--full-width"><span class="detail-row__label">Heading Issues:</span><span class="detail-row__value ${headingIssues.length > 0 ? 'detail-row__value--warning' : ''}">${headingIssuesHtml}</span></div>
+    </div>
+    <div class="actions"><a href="${payload.previewUrl}" target="_blank" class="btn btn--secondary">View Preview</a></div>
+    <p class="info-note">Review request has been recorded. Use "Get Page Current Status" to check progress.</p>`;
+}
+
+function render(viewState) {
+  const app = document.getElementById('app');
+  let content = '';
+  switch (viewState.status) {
+    case STATUS.LOADING: content = renderLoading(viewState.message); break;
+    case STATUS.ERROR: content = renderError(viewState.message); break;
+    case STATUS.IN_REVIEW: content = renderInReview(viewState.data); break;
+    case STATUS.BLOCKED: content = renderBlocked(viewState.data); break;
+    case STATUS.CHANGES_REQUESTED: content = renderChangesRequested(viewState); break;
+    case STATUS.REJECTED: content = renderRejected(viewState.data); break;
+    case STATUS.COMPLETE: content = renderComplete(viewState); break;
+    case STATUS.READY: content = renderReadyForm(viewState.title, viewState.name, viewState.analysis); break;
+    case STATUS.READY_MINIMAL: content = renderReadyMinimal(viewState.name); break;
+    case STATUS.SUCCESS: content = renderSuccess(viewState.payload); break;
+    default: content = renderError('Unknown state');
+  }
+  app.innerHTML = `<div class="review-card">${renderHeader()}<div class="content">${content}</div></div>`;
+  attachEventListeners();
+}
+
+function attachEventListeners() {
+  document.getElementById('retry-btn')?.addEventListener('click', init);
+  document.getElementById('submit-btn')?.addEventListener('click', handleSubmit);
+  document.getElementById('debug-toggle')?.addEventListener('click', toggleDebugPanel);
+  const notesInput = document.getElementById('notes-input');
+  const notesCharCount = document.getElementById('notes-char-count');
+  if (notesInput && notesCharCount) {
+    notesInput.addEventListener('input', () => { notesCharCount.textContent = notesInput.value.length; });
+  }
+}
+
+function toggleDebugPanel() {
+  const panel = document.getElementById('debug-panel');
+  if (panel) { panel.classList.toggle('debug-panel--visible'); panel.textContent = state.debugLogs.join('\n'); }
+}
+
+async function handleSubmit() {
+  const emailInput = document.getElementById('email-input');
+  const notesInput = document.getElementById('notes-input');
+  const prioritySelect = document.getElementById('priority-select');
+  const email = emailInput?.value?.trim() || '';
+  const notes = notesInput?.value?.trim() || '';
+  const priority = prioritySelect?.value || DEFAULT_PRIORITY;
+  if (!isValidEmail(email)) { emailInput?.focus(); emailInput?.classList.add('form-input--error'); return; }
+  storage.saveEmail(email);
+  render({ status: STATUS.LOADING, message: 'Submitting review request…' });
+  try {
+    const payload = buildPayload(state.context, state.analysis, email, notes, priority);
+    await submitReview(payload);
+    render({ status: STATUS.SUCCESS, payload });
+  } catch (error) {
+    log('Submit error', error.message);
+    render({ status: STATUS.ERROR, message: `Failed to submit: ${error.message}` });
+  }
+}
+
+async function init() {
+  render({ status: STATUS.LOADING, message: 'Initializing…' });
+  try {
+    state.context = await getFullContext();
+    if (!state.context.org || !state.context.site) {
+      render({ status: STATUS.ERROR, message: 'Could not determine page context. Make sure you have a page open.' });
+      return;
     }
+    render({ status: STATUS.LOADING, message: 'Checking review status…' });
+    const statusResponse = await checkReviewStatus(state.context);
+    const currentStatus = statusResponse?.status ? normalizeStatus(statusResponse.status) : 'none';
+    log('Normalized status', { raw: statusResponse?.status, normalized: currentStatus });
 
-    // ============================================
-    // PAYLOAD BUILDING
-    // ============================================
-    function buildPayload(ctx, analysis, email, notes = '') {
-      const name = ctx.path.split('/').pop() || 'index';
-      let title = analysis.seo?.title?.content || name;
-      if (!title || title === name) {
-        const h1 = analysis.headingStructure?.headings?.find(h => h.level === 1);
-        if (h1) title = h1.text;
-      }
-      return {
-        title, name, slug: ctx.slug,
-        path: '/' + ctx.path,
-        previewUrl: ctx.previewUrl,
-        liveUrl: ctx.liveUrl,
-        daEditUrl: ctx.daEditUrl,
-        reviewSubmissionDate: new Date().toISOString(),
-        submittedBy: email || 'unknown',
-        org: ctx.org, site: ctx.site, ref: ctx.ref,
-        source: 'DA.live Library',
-        pageIdentifier: ctx.pageIdentifier,
-        contentMetrics: analysis.contentMetrics,
-        headingStructure: analysis.headingStructure,
-        blocks: analysis.blocks,
-        seo: analysis.seo,
-        accessibility: analysis.accessibility,
-        notes: notes || '',
-      };
+    if (BLOCKED_STATUSES.includes(currentStatus)) {
+      render({ status: STATUS.BLOCKED, data: statusResponse }); return;
     }
-
-    async function postToProxy(payload) {
-      log('Sending payload via proxy', { slug: payload.slug, path: payload.path });
-      const res = await fetch(CONFIG.submitProxyUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      log('Proxy response', data);
-      return data;
+    if (currentStatus === 'rejected') {
+      render({ status: STATUS.REJECTED, data: statusResponse }); return;
     }
-
-    // ============================================
-    // UI RENDERING
-    // ============================================
-    function renderCard(state) {
-      const details = document.getElementById('details');
-      let content = '';
-      const headerHtml = `<div class="header-bar"><span class="header-logo">⚡</span><span class="header-title">ContentFlow — Send For Review</span></div>`;
-
-      if (state.status === 'loading') {
-        content = `<div class="notice"><div class="spinner"></div><p class="status-message loading">${state.message}</p></div>`;
-      }
-      else if (state.status === 'error') {
-        content = `<div class="notice"><p class="status-message error">${state.message}</p><button id="retry-btn" class="btn btn-primary" style="margin-top:12px;">Retry</button><div class="debug-toggle" id="debug-toggle">Show debug info</div><div class="debug-panel" id="debug-panel" style="display:none;"></div></div>`;
-      }
-      // ── BLOCKED: in-review, approved, published, scheduled ──
-      else if (state.status === 'blocked') {
-        const d = state.data;
-        const status = normalizeStatus(d.status);
-        const statusLabel = getStatusLabel(status);
-
-        const blockMessages = {
-          'in-review': 'This page is currently under review. Please wait for the reviewer to complete their assessment.',
-          'approved': 'This page has been approved. Open the Publish task in Workfront to publish it.',
-          'published': 'This page has already been published.',
-          'scheduled': 'This page is scheduled for publishing.',
-        };
-
-        content = `
-          <p class="status-message blocked">${blockMessages[status] || 'Review submission is not available.'}</p>
-          <div class="page-details">
-            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
-            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge ${status}">${statusLabel}</span></span></div>
-            ${d.title ? `<div class="detail-row"><span class="label">Title:</span><span class="value">${d.title}</span></div>` : ''}
-            ${d.submittedBy ? `<div class="detail-row"><span class="label">Submitted By:</span><span class="value">${d.submittedBy}</span></div>` : ''}
-            ${d.submittedDate ? `<div class="detail-row"><span class="label">Submitted:</span><span class="value">${formatDate(d.submittedDate)}</span></div>` : ''}
-            ${d.workfrontUrl ? `<div class="wf-link"><a href="${d.workfrontUrl}" target="_blank">View in Workfront →</a></div>` : ''}
-          </div>
-          <div class="actions">
-            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
-            <button class="btn btn-primary" disabled>Submit for Review</button>
-          </div>`;
-      }
-      // ── REJECTED (Not Relevant) — terminal, no resubmit ──
-      else if (state.status === 'rejected') {
-        const d = state.data;
-        const feedback = cleanFeedback(d.reviewerFeedback);
-
-        content = `
-          <p class="status-message rejected">This page was marked as "Not Relevant" and the project has been closed.</p>
-          ${feedback ? `<div class="feedback-box"><div class="feedback-header">Reviewer Feedback</div><div class="feedback-text">${feedback}</div></div>` : ''}
-          <div class="page-details">
-            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
-            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge rejected">Not Relevant</span></span></div>
-            ${d.workfrontUrl ? `<div class="wf-link"><a href="${d.workfrontUrl}" target="_blank">View in Workfront →</a></div>` : ''}
-          </div>
-          <div class="actions">
-            <a href="${currentContext.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
-            <button class="btn btn-primary" disabled>Submit for Review</button>
-          </div>
-          <p class="info-note">To resubmit, create a new project via the Product Launch form.</p>`;
-      }
-      // ── CHANGES REQUESTED — show feedback + allow resubmit ──
-      else if (state.status === 'changes-requested') {
-        const d = state.data;
-        const a = state.analysis;
-        const feedback = cleanFeedback(d.reviewerFeedback);
-        const rejCount = parseInt(d.rejectionCount) || 0;
-        const storedEmail = d.submittedBy || getStoredEmail();
-        const seoIssues = a.seo?.issues?.length > 0 ? a.seo.issues.join(', ') : 'None';
-        const seoClass = a.seo?.issues?.length > 0 ? 'warning' : 'success';
-        const blocks = a.blocks?.blockNames?.length > 0 ? a.blocks.blockNames.join(', ') : 'None';
-
-        content = `
-          <p class="status-message changes-requested">Reviewer has requested changes. Review the feedback, make edits, then resubmit.</p>
-          ${feedback ? `<div class="feedback-box"><div class="feedback-header">Reviewer Feedback</div><div class="feedback-text">${feedback}</div></div>` : ''}
-          <div class="page-details">
-            <div class="detail-row"><span class="label">Page:</span><span class="value">${currentContext.path}</span></div>
-            <div class="detail-row"><span class="label">Status:</span><span class="value"><span class="status-badge changes-requested">Changes Requested</span> ${rejCount > 0 ? `<span class="rejection-badge">↻ ${rejCount} revision${rejCount > 1 ? 's' : ''}</span>` : ''}</span></div>
-            <div class="detail-row"><span class="label">Title:</span><span class="value">${state.title}</span></div>
-            <div class="detail-row"><span class="label">SEO Issues:</span><span class="value ${seoClass}">${seoIssues}</span></div>
-            <div class="detail-row"><span class="label">Blocks:</span><span class="value">${a.blocks?.totalBlocks || 0} (${blocks})</span></div>
-            ${d.lastReviewDate ? `<div class="detail-row"><span class="label">Last Reviewed:</span><span class="value">${formatDate(d.lastReviewDate)}</span></div>` : ''}
-          </div>
-          <div class="form-section">
-            <div class="form-group">
-              <label class="form-label">Your Email <span class="required">*</span></label>
-              <input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${storedEmail}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Notes / What Changed</label>
-              <textarea id="notes-input" class="form-textarea" placeholder="Describe the changes you made in response to the feedback..."></textarea>
-            </div>
-          </div>
-          <div class="actions"><button id="submit-btn" class="btn btn-warning">Resubmit for Review</button></div>`;
-      }
-      // ── READY — first-time submission ──
-      else if (state.status === 'ready') {
-        const a = state.analysis;
-        const seoIssues = a.seo?.issues?.length > 0 ? a.seo.issues.join(', ') : 'None';
-        const seoClass = a.seo?.issues?.length > 0 ? 'warning' : 'success';
-        const blocks = a.blocks?.blockNames?.length > 0 ? a.blocks.blockNames.join(', ') : 'None';
-        const storedEmail = getStoredEmail();
-
-        content = `
-          <p class="status-message loading">Ready to submit for review.</p>
-          <div class="page-details">
-            <div class="detail-row"><span class="label">Title:</span><span class="value">${state.title}</span></div>
-            <div class="detail-row"><span class="label">Path:</span><span class="value">${currentContext.path}</span></div>
-            <div class="detail-row"><span class="label">SEO Issues:</span><span class="value ${seoClass}">${seoIssues}</span></div>
-            <div class="detail-row"><span class="label">Blocks:</span><span class="value">${a.blocks?.totalBlocks || 0} (${blocks})</span></div>
-          </div>
-          <div class="form-section">
-            <div class="form-group">
-              <label class="form-label">Your Email <span class="required">*</span></label>
-              <input type="email" id="email-input" class="form-input" placeholder="Enter your email address" value="${storedEmail}" required>
-              <div class="form-hint">Required for review tracking</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Notes / Instructions (Optional)</label>
-              <textarea id="notes-input" class="form-textarea" placeholder="Enter any notes for the reviewer..."></textarea>
-            </div>
-          </div>
-          <div class="actions"><button id="submit-btn" class="btn btn-primary">Submit for Review</button></div>`;
-      }
-      // ── SUCCESS ──
-      else if (state.status === 'success') {
-        const p = state.payload;
-        const r = state.response || {};
-        content = `
-          <p class="status-message success">Review request submitted successfully!</p>
-          <div class="page-details">
-            <div class="detail-row"><span class="label">Title:</span><span class="value">${p.title}</span></div>
-            <div class="detail-row"><span class="label">Submitter:</span><span class="value">${p.submittedBy}</span></div>
-            <div class="detail-row"><span class="label">Submitted On:</span><span class="value">${formatDate(p.reviewSubmissionDate)}</span></div>
-            ${p.notes ? `<div class="detail-row full-width"><span class="label">Notes:</span><span class="value">${p.notes}</span></div>` : ''}
-            ${r.workfrontURL ? `<div class="wf-link"><a href="${r.workfrontURL}" target="_blank">View Project in Workfront →</a></div>` : ''}
-          </div>
-          <div class="actions">
-            <a href="${p.previewUrl}" target="_blank" class="btn btn-secondary">View Preview</a>
-          </div>
-          <p class="info-note">Review request sent to Workfront. Use "Get Page Status" to check progress.</p>`;
-      }
-
-      details.innerHTML = `<div id="review-card">${headerHtml}<div class="content">${content}</div></div>`;
-
-      // Event listeners
-      document.getElementById('retry-btn')?.addEventListener('click', init);
-      document.getElementById('submit-btn')?.addEventListener('click', handleSubmit);
-      document.getElementById('debug-toggle')?.addEventListener('click', () => {
-        const p = document.getElementById('debug-panel');
-        if (p) { p.style.display = p.style.display === 'none' ? 'block' : 'none'; p.textContent = debugLogs.join('\n'); }
-      });
-    }
-
-    async function handleSubmit() {
-      const emailInput = document.getElementById('email-input');
-      const notesInput = document.getElementById('notes-input');
-      const email = emailInput?.value?.trim() || '';
-      const notes = notesInput?.value?.trim() || '';
-
-      if (!email || !email.includes('@')) {
-        emailInput?.focus();
-        emailInput?.classList.add('error');
-        return;
-      }
-
-      saveEmail(email);
-      renderCard({ status: 'loading', message: 'Submitting review request...' });
-
-      try {
-        const payload = buildPayload(currentContext, currentAnalysis, email, notes);
-        const response = await postToProxy(payload);
-        renderCard({ status: 'success', payload, response });
-      } catch (err) {
-        log('Submit error', err.message);
-        renderCard({ status: 'error', message: `Failed to submit: ${err.message}` });
-      }
-    }
-
-    // ============================================
-    // INITIALIZATION
-    // ============================================
-    async function init() {
-      renderCard({ status: 'loading', message: 'Initializing...' });
-
-      try {
-        currentContext = await getFullContext();
-        if (!currentContext.org || !currentContext.site) {
-          renderCard({ status: 'error', message: 'Could not determine page context. Make sure you have a page open.' });
-          return;
-        }
-
-        // Step 1: Check current status
-        renderCard({ status: 'loading', message: 'Checking review status...' });
-        const statusResponse = await checkReviewStatus(currentContext);
-        currentStatusData = statusResponse;
-
-        if (statusResponse && statusResponse.status && statusResponse.status !== 'none' && statusResponse.status !== 'not-found') {
-          const status = normalizeStatus(statusResponse.status);
-
-          // BLOCKED statuses — show info, disable submit
-          if (BLOCKED_STATUSES.includes(status)) {
-            log('Submission blocked', { status });
-            renderCard({ status: 'blocked', data: statusResponse });
-            return;
-          }
-
-          // REJECTED (Not Relevant) — terminal, no resubmit
-          if (status === 'rejected') {
-            log('Project rejected/closed', { status });
-            renderCard({ status: 'rejected', data: statusResponse });
-            return;
-          }
-
-          // CHANGES REQUESTED — show feedback, allow resubmit
-          if (RESUBMIT_STATUSES.includes(status)) {
-            log('Changes requested, analyzing page for resubmit...');
-            renderCard({ status: 'loading', message: 'Analyzing page for resubmission...' });
-
-            const content = await fetchContent(currentContext);
-            if (!content?.html) {
-              renderCard({ status: 'error', message: 'Could not fetch page content.' });
-              return;
-            }
-            const doc = new DOMParser().parseFromString(content.html, 'text/html');
-            currentAnalysis = analyzeDocument(doc, content.isPlain);
-
-            const name = currentContext.path.split('/').pop() || 'index';
-            let title = currentAnalysis?.seo?.title?.content || name;
-            if ((!title || title === name) && currentAnalysis?.headingStructure?.headings?.length) {
-              const h1 = currentAnalysis.headingStructure.headings.find(h => h.level === 1);
-              if (h1) title = h1.text;
-            }
-
-            renderCard({ status: 'changes-requested', data: statusResponse, analysis: currentAnalysis, title });
-            return;
-          }
-        }
-
-        // Step 2: No active review or authoring — show fresh submission form
-        renderCard({ status: 'loading', message: 'Analyzing page...' });
-        const content = await fetchContent(currentContext);
-        if (!content?.html) {
-          renderCard({ status: 'error', message: 'Could not fetch page content. Make sure the page exists and is previewed.' });
-          return;
-        }
-
+    if (RESUBMIT_STATUSES.includes(currentStatus)) {
+      render({ status: STATUS.LOADING, message: 'Analyzing page for resubmission…' });
+      const content = await fetchContent(state.context);
+      const name = state.context.path.split('/').pop() || 'index';
+      let title = name;
+      if (content?.html) {
         const doc = new DOMParser().parseFromString(content.html, 'text/html');
-        currentAnalysis = analyzeDocument(doc, content.isPlain);
-
-        const name = currentContext.path.split('/').pop() || 'index';
-        let title = currentAnalysis?.seo?.title?.content || name;
-        if ((!title || title === name) && currentAnalysis?.headingStructure?.headings?.length) {
-          const h1 = currentAnalysis.headingStructure.headings.find(h => h.level === 1);
+        state.analysis = analyzeDocument(doc, content.isPlain);
+        title = state.analysis?.seo?.title?.content || name;
+        if ((!title || title === name) && state.analysis?.headingStructure?.headings?.length) {
+          const h1 = state.analysis.headingStructure.headings.find((h) => h.level === 1);
           if (h1) title = h1.text;
         }
-
-        renderCard({ status: 'ready', title, name, analysis: currentAnalysis });
-
-      } catch (err) {
-        log('Init error', err.message);
-        renderCard({ status: 'error', message: `Error: ${err.message}` });
-      }
+      } else { state.analysis = createMinimalAnalysis(); }
+      render({ status: STATUS.CHANGES_REQUESTED, data: statusResponse, title, name, analysis: state.analysis }); return;
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-    else init();
+    render({ status: STATUS.LOADING, message: 'Analyzing page…' });
+    const content = await fetchContent(state.context);
+    const name = state.context.path.split('/').pop() || 'index';
+    let title = name;
+    if (content?.html) {
+      const doc = new DOMParser().parseFromString(content.html, 'text/html');
+      state.analysis = analyzeDocument(doc, content.isPlain);
+      title = state.analysis?.seo?.title?.content || name;
+      if ((!title || title === name) && state.analysis?.headingStructure?.headings?.length) {
+        const h1 = state.analysis.headingStructure.headings.find((h) => h.level === 1);
+        if (h1) title = h1.text;
+      }
+    } else { state.analysis = createMinimalAnalysis(); }
+
+    if (currentStatus === 'complete') {
+      render({ status: STATUS.COMPLETE, data: statusResponse, title, name, analysis: state.analysis });
+    } else if (content?.html) {
+      render({ status: STATUS.READY, title, name, analysis: state.analysis });
+    } else {
+      render({ status: STATUS.READY_MINIMAL, title, name });
+    }
+  } catch (error) {
+    log('Init error', error.message);
+    render({ status: STATUS.ERROR, message: `Error: ${error.message}` });
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
   </script>
 </body>
-</html> -->
+</html>
