@@ -1,0 +1,387 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--agt-background-bg-base-primary);
+  color: var(--agt-text-icons-tx-base-title);
+  line-height: 1.5;
+}
+
+.status-card {
+  background-color: var(--agt-background-bg-base-white);
+  border: 1px solid var(--agt-utility-navy-grey-300);
+  box-shadow: var(--agt-shadow-md);
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--agt-background-bg-brand);
+  padding: var(--agt-spacing-md) var(--agt-spacing-lg);
+  color: var(--agt-background-bg-base-white);
+  font-weight: var(--agt-font-weight-bold);
+  font-size: var(--agt-font-size-16);
+}
+
+.header-bar .logo {
+  height: var(--agt-spacing-5xl);
+  margin-right: var(--agt-spacing-md);
+}
+
+.content {
+  padding: var(--agt-spacing-xl) var(--agt-spacing-2xl);
+}
+
+.status-message {
+  font-weight: var(--agt-font-weight-semibold);
+  margin-bottom: var(--agt-spacing-xl);
+  padding: var(--agt-spacing-lg) var(--agt-spacing-xl);
+  border-radius: var(--agt-roundness-main);
+}
+
+.status-message--loading {
+  color: var(--agt-text-icons-tx-base-second);
+  font-style: italic;
+  background-color: var(--agt-background-bg-base-secondary);
+}
+
+.status-message--in-review {
+  color: var(--agt-text-icons-tx-warning);
+  background-color: var(--agt-background-bg-warning-light);
+  border: 1px solid var(--agt-utility-yellow-200);
+}
+
+.status-message--no-review {
+  color: var(--agt-text-icons-tx-success);
+  background-color: var(--agt-background-bg-success-light);
+  border: 1px solid var(--agt-utility-dark-green-300);
+}
+
+.status-message--complete {
+  color: var(--agt-text-icons-tx-success);
+  background-color: var(--agt-background-bg-success-light);
+  border: 1px solid var(--agt-utility-dark-green-300);
+}
+
+.status-message--error {
+  color: var(--agt-text-icons-tx-error);
+  background-color: var(--agt-background-bg-error-light);
+  border: 1px solid var(--agt-utility-red-300);
+}
+
+.page-details {
+  margin: var(--agt-spacing-xl) 0;
+}
+
+.detail-row {
+  display: flex;
+  padding: var(--agt-spacing-sm) 0;
+  border-bottom: 1px solid var(--agt-utility-grey-200);
+  font-size: var(--agt-font-size-14);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row--full-width {
+  flex-direction: column;
+}
+
+.detail-row__label {
+  font-weight: var(--agt-font-weight-semibold);
+  color: var(--agt-text-icons-tx-brand-main);
+  min-width: var(--agt-min-max-system-120px);
+  flex-shrink: 0;
+}
+
+.detail-row__value {
+  color: var(--agt-text-icons-tx-base-title);
+  overflow-wrap: break-word;
+}
+
+.detail-row__value--warning {
+  color: var(--agt-text-icons-tx-warning);
+}
+
+.detail-row__value--success {
+  color: var(--agt-text-icons-tx-success);
+}
+
+.detail-row--full-width .detail-row__value {
+  margin-top: var(--agt-spacing-2xs);
+  padding: var(--agt-spacing-sm) var(--agt-spacing-lg);
+  background-color: var(--agt-background-bg-base-primary);
+  border-radius: var(--agt-roundness-main);
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: var(--agt-spacing-lg);
+  margin-top: var(--agt-spacing-2xl);
+  padding-top: var(--agt-spacing-xl);
+  border-top: 1px solid var(--agt-utility-grey-200);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--agt-spacing-md) var(--agt-spacing-2xl);
+  font-size: var(--agt-font-size-14);
+  font-weight: var(--agt-font-weight-semibold);
+  border-radius: var(--agt-roundness-main);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s, border-color 0.2s;
+  border: none;
+  flex: 1;
+}
+
+.btn--primary {
+  background-color: var(--agt-background-bg-brand);
+  color: var(--agt-background-bg-base-white);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--agt-background-bg-brand-hover);
+}
+
+.btn--secondary {
+  background-color: var(--agt-background-bg-base-white);
+  color: var(--agt-background-bg-brand);
+  border: 1px solid var(--agt-background-bg-brand);
+}
+
+.btn--secondary:hover {
+  background-color: var(--agt-background-bg-brand-light);
+}
+
+.notice {
+  text-align: center;
+  padding: var(--agt-spacing-2xl);
+}
+
+.spinner {
+  width: var(--agt-spacing-5xl);
+  height: var(--agt-spacing-5xl);
+  border: var(--agt-roundness-main) solid var(--agt-utility-grey-400);
+  border-top-color: var(--agt-background-bg-brand);
+  border-radius: var(--agt-roundness-full);
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--agt-spacing-xl);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.info-note {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-base-second);
+  margin-top: var(--agt-spacing-lg);
+  text-align: center;
+  padding: var(--agt-spacing-sm);
+  background: var(--agt-background-bg-base-secondary);
+  border-radius: var(--agt-roundness-main);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: var(--agt-spacing-2xs) var(--agt-spacing-lg);
+  border-radius: var(--agt-roundness-secondary);
+  font-size: var(--agt-font-size-12);
+  font-weight: var(--agt-font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.status-badge--in-review {
+  background: var(--agt-background-bg-warning-light);
+  color: var(--agt-text-icons-tx-warning);
+}
+
+.status-badge--no-review {
+  background: var(--agt-background-bg-success-light);
+  color: var(--agt-text-icons-tx-success);
+}
+
+.status-badge--complete {
+  background: var(--agt-utility-light-blue-200);
+  color: var(--agt-text-icons-tx-base-title);
+}
+
+.char-count {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-base-tertiary);
+  font-weight: normal;
+}
+
+.issue-item {
+  display: inline-block;
+  background-color: var(--agt-background-bg-warning-light);
+  color: var(--agt-text-icons-tx-warning);
+  padding: var(--agt-corner-small) var(--agt-spacing-sm);
+  border-radius: var(--agt-corner-small);
+  font-size: var(--agt-font-size-12);
+  margin: var(--agt-corner-small) var(--agt-spacing-2xs) var(--agt-corner-small) 0;
+}
+
+.debug-toggle {
+  font-size: var(--agt-font-size-12);
+  color: var(--agt-text-icons-tx-base-second);
+  cursor: pointer;
+  margin-top: var(--agt-spacing-lg);
+  text-decoration: underline;
+}
+
+.debug-panel {
+  margin-top: var(--agt-spacing-lg);
+  padding: var(--agt-spacing-md);
+  background: var(--agt-background-bg-warning-on);
+  border-radius: var(--agt-roundness-main);
+  font-size: var(--agt-font-size-10);
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: var(--agt-min-max-system-160px);
+  overflow-y: auto;
+  display: none;
+}
+
+.debug-panel--visible {
+  display: block;
+}
+
+/* ============================================
+   NEW: Approved / Changes Requested / Rejected
+   ============================================ */
+
+.status-message--approved {
+  color: var(--agt-text-icons-tx-success);
+  background-color: var(--agt-background-bg-success-light);
+  border: 1px solid var(--agt-utility-dark-green-300);
+}
+
+.status-message--changes-requested {
+  color: #e65100;
+  background-color: #fff3e0;
+  border: 1px solid #ffe0b2;
+}
+
+.status-message--rejected {
+  color: var(--agt-text-icons-tx-error);
+  background-color: var(--agt-background-bg-error-light);
+  border: 1px solid var(--agt-utility-red-300);
+}
+
+.status-message--published {
+  color: var(--agt-text-icons-tx-success);
+  background-color: var(--agt-background-bg-success-light);
+  border: 1px solid var(--agt-utility-dark-green-300);
+}
+
+.status-message--scheduled {
+  color: var(--agt-text-icons-tx-brand-main);
+  background-color: var(--agt-utility-light-blue-200);
+  border: 1px solid var(--agt-utility-light-blue-300);
+}
+
+/* Feedback box */
+.feedback-box {
+  margin: var(--agt-spacing-xl) 0;
+  padding: var(--agt-spacing-lg) var(--agt-spacing-xl);
+  border-radius: var(--agt-roundness-main);
+  border-left: 4px solid #e65100;
+  background: #fff8f0;
+}
+
+.feedback-box--rejected {
+  border-left-color: var(--agt-background-bg-error-main);
+  background: var(--agt-background-bg-error-light);
+}
+
+.feedback-box__header {
+  font-weight: var(--agt-font-weight-bold);
+  font-size: var(--agt-font-size-12);
+  color: #e65100;
+  margin-bottom: var(--agt-spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feedback-box--rejected .feedback-box__header {
+  color: var(--agt-text-icons-tx-error);
+}
+
+.feedback-box__text {
+  font-size: var(--agt-font-size-14);
+  color: var(--agt-text-icons-tx-base-title);
+  line-height: 1.6;
+}
+
+/* Additional status badges */
+.status-badge--approved {
+  background: var(--agt-background-bg-success-light);
+  color: var(--agt-text-icons-tx-success);
+}
+
+.status-badge--changes-requested {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-badge--rejected {
+  background: var(--agt-background-bg-error-light);
+  color: var(--agt-text-icons-tx-error);
+}
+
+.status-badge--published {
+  background: var(--agt-utility-light-blue-200);
+  color: var(--agt-text-icons-tx-brand-main);
+}
+
+.status-badge--scheduled {
+  background: var(--agt-utility-light-blue-200);
+  color: var(--agt-text-icons-tx-brand-main);
+}
+
+/* Rejection count badge */
+.rejection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--agt-spacing-2xs);
+  padding: var(--agt-corner-small) var(--agt-spacing-sm);
+  border-radius: var(--agt-roundness-full);
+  font-size: var(--agt-font-size-12);
+  font-weight: var(--agt-font-weight-semibold);
+  background: var(--agt-background-bg-error-light);
+  color: var(--agt-text-icons-tx-error);
+  margin-left: var(--agt-spacing-sm);
+}
+
+.priority-urgent {
+  color: var(--agt-text-icons-tx-error);
+  font-weight: var(--agt-font-weight-semibold);
+}
+
+.priority-standard {
+  color: var(--agt-background-bg-brand);
+  font-weight: var(--agt-font-weight-semibold);
+}
+
+.priority-future-deployment {
+  color: var(--agt-utility-dark-blue-800);
+  font-weight: var(--agt-font-weight-semibold);
+}
